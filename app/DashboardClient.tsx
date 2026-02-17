@@ -151,6 +151,36 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
               ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
             </div>
             <Calendar events={data.upcomingEvents} />
+
+            {/* Avatar */}
+            <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
+              {data.agentActive && (
+                <style>{`
+                  @keyframes avatar-pulse {
+                    0%, 100% { box-shadow: 0 0 8px 2px rgba(74, 222, 128, 0.3); }
+                    50% { box-shadow: 0 0 20px 6px rgba(74, 222, 128, 0.6); }
+                  }
+                `}</style>
+              )}
+              <div
+                style={{
+                  width: 158,
+                  height: 158,
+                  borderRadius: "50%",
+                  overflow: "hidden",
+                  border: data.agentActive ? "2px solid #4ade80" : "2px solid #1a1a1a",
+                  animation: data.agentActive ? "avatar-pulse 2s ease-in-out infinite" : "none",
+                  transition: "border-color 0.3s ease",
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="https://sacwbhhusphqzsaoyhit.supabase.co/storage/v1/object/public/identity/avatar.png"
+                  alt="avatar"
+                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                />
+              </div>
+            </div>
           </aside>
         </div>
 
