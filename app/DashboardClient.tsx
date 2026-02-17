@@ -80,7 +80,6 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           flex: 1,
           padding: "24px 32px 64px",
           overflowY: "auto",
-          maxWidth: 960,
         }}
       >
         {/* Prompt */}
@@ -101,49 +100,68 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
         {/* Focus */}
         {data.focus && <FocusStrip content={data.focus.content} />}
 
-        {/* Tasks */}
-        <section style={{ marginBottom: 28 }}>
-          <div
-            style={{
-              color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              padding: "6px 0 10px",
-              borderBottom: "1px solid #1a1a1a",
-              marginBottom: 4,
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>── tasks ──</span>
-            <span>{data.counts.openTasks} open</span>
-          </div>
-          {data.tasks.map((task, i) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              index={i + 1}
-              onComplete={handleComplete}
-            />
-          ))}
-          {data.tasks.length === 0 && (
-            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-              no open tasks
-            </div>
-          )}
-        </section>
-
-        {/* Three-column: Projects | Inbox | Calendar */}
+        {/* Main grid: tasks + calendar top, projects + inbox bottom */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1fr",
-            gap: 32,
+            gridTemplateColumns: "1fr 1fr 1.5fr",
+            gridTemplateRows: "auto auto",
+            gap: "28px 32px",
           }}
         >
-          {/* Projects */}
-          <section>
+          {/* Tasks — top left, spans 2 cols */}
+          <section style={{ gridColumn: "1 / 3", gridRow: "1" }}>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>── tasks ──</span>
+              <span>{data.counts.openTasks} open</span>
+            </div>
+            {data.tasks.map((task, i) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                index={i + 1}
+                onComplete={handleComplete}
+              />
+            ))}
+            {data.tasks.length === 0 && (
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+                no open tasks
+              </div>
+            )}
+          </section>
+
+          {/* Calendar — top right, spans both rows */}
+          <section style={{ gridColumn: "3", gridRow: "1 / 3" }}>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 10,
+              }}
+            >
+              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
+            </div>
+            <Calendar events={data.upcomingEvents} />
+          </section>
+
+          {/* Projects — bottom left */}
+          <section style={{ gridColumn: "1", gridRow: "2" }}>
             <div
               style={{
                 color: "#555",
@@ -172,8 +190,8 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
 
-          {/* Inbox */}
-          <section>
+          {/* Inbox — bottom right (next to projects) */}
+          <section style={{ gridColumn: "2", gridRow: "2" }}>
             <div
               style={{
                 color: "#555",
@@ -202,24 +220,6 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
                 inbox clear
               </div>
             )}
-          </section>
-
-          {/* Calendar */}
-          <section>
-            <div
-              style={{
-                color: "#555",
-                fontSize: "12px",
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                padding: "6px 0 10px",
-                borderBottom: "1px solid #1a1a1a",
-                marginBottom: 10,
-              }}
-            >
-              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
-            </div>
-            <Calendar events={data.upcomingEvents} />
           </section>
         </div>
       </main>
