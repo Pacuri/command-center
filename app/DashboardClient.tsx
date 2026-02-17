@@ -75,35 +75,38 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar inboxCount={data.counts.unreadInbox} />
 
-      <main
+      {/* Main area with calendar to the right */}
+      <div
         style={{
           flex: 1,
+          display: "flex",
           padding: "24px 32px 64px",
           overflowY: "auto",
+          gap: 32,
         }}
       >
-        {/* Prompt */}
-        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
-          <span style={{ color: "#4ade80" }}>nikola</span>
-          <span style={{ color: "#333" }}>@cc</span>{" "}
-          <span>~/overview</span>
-        </div>
-        <div
-          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
-        >
-          {dateStr} · {data.counts.dueToday} due today ·{" "}
-          {data.counts.todayEvents} meeting
-          {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
-          {data.counts.unreadInbox} inbox
-        </div>
+        {/* Left: all main content */}
+        <main style={{ maxWidth: 960, flex: 1, minWidth: 0 }}>
+          {/* Prompt */}
+          <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
+            <span style={{ color: "#4ade80" }}>nikola</span>
+            <span style={{ color: "#333" }}>@cc</span>{" "}
+            <span>~/overview</span>
+          </div>
+          <div
+            style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+          >
+            {dateStr} · {data.counts.dueToday} due today ·{" "}
+            {data.counts.todayEvents} meeting
+            {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
+            {data.counts.unreadInbox} inbox
+          </div>
 
-        {/* Focus */}
-        {data.focus && <FocusStrip content={data.focus.content} />}
+          {/* Focus */}
+          {data.focus && <FocusStrip content={data.focus.content} />}
 
-        {/* Tasks + Calendar row */}
-        <div style={{ display: "flex", gap: 32, marginBottom: 28 }}>
           {/* Tasks */}
-          <section style={{ flex: 1, minWidth: 0 }}>
+          <section style={{ marginBottom: 28 }}>
             <div
               style={{
                 color: "#555",
@@ -135,26 +138,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
 
-          {/* Calendar */}
-          <div style={{ width: 220, flexShrink: 0 }}>
-            <div
-              style={{
-                color: "#555",
-                fontSize: "12px",
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                padding: "6px 0 10px",
-                borderBottom: "1px solid #1a1a1a",
-                marginBottom: 10,
-              }}
-            >
-              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
-            </div>
-            <Calendar events={data.upcomingEvents} />
-          </div>
-        </div>
-
-        {/* Projects + Inbox row */}
+          {/* Projects + Inbox row */}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
           {/* Projects */}
           <section>
@@ -218,7 +202,26 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
         </div>
-      </main>
+        </main>
+
+        {/* Calendar — right side, outside main content width */}
+        <aside style={{ width: 180, flexShrink: 0 }}>
+          <div
+            style={{
+              color: "#555",
+              fontSize: "12px",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              padding: "6px 0 10px",
+              borderBottom: "1px solid #1a1a1a",
+              marginBottom: 10,
+            }}
+          >
+            ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
+          </div>
+          <Calendar events={data.upcomingEvents} />
+        </aside>
+      </div>
 
       <StatusBar counts={data.counts} />
     </div>
