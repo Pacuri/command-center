@@ -82,35 +82,39 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           overflowY: "auto",
         }}
       >
-        {/* Prompt */}
-        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
-          <span style={{ color: "#4ade80" }}>nikola</span>
-          <span style={{ color: "#333" }}>@cc</span>{" "}
-          <span>~/overview</span>
-        </div>
-        <div
-          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
-        >
-          {dateStr} · {data.counts.dueToday} due today ·{" "}
-          {data.counts.todayEvents} meeting
-          {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
-          {data.counts.unreadInbox} inbox
-        </div>
-
-        {/* Focus */}
-        {data.focus && <FocusStrip content={data.focus.content} />}
-
-        {/* Main grid: tasks + calendar top, projects + inbox bottom */}
+        {/* Main grid */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr 1.5fr",
-            gridTemplateRows: "auto auto",
-            gap: "28px 32px",
+            gridTemplateColumns: "1fr 1fr 0.75fr",
+            gridTemplateRows: "auto auto auto auto",
+            gap: "0px 32px",
           }}
         >
+          {/* Prompt — spans tasks columns only */}
+          <div style={{ gridColumn: "1 / 3", color: "#555", marginBottom: 6, fontSize: "14px" }}>
+            <span style={{ color: "#4ade80" }}>nikola</span>
+            <span style={{ color: "#333" }}>@cc</span>{" "}
+            <span>~/overview</span>
+          </div>
+          <div
+            style={{ gridColumn: "1 / 3", marginBottom: 16, color: "#555", fontSize: "13px" }}
+          >
+            {dateStr} · {data.counts.dueToday} due today ·{" "}
+            {data.counts.todayEvents} meeting
+            {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
+            {data.counts.unreadInbox} inbox
+          </div>
+
+          {/* Focus — spans tasks columns only */}
+          {data.focus && (
+            <div style={{ gridColumn: "1 / 3" }}>
+              <FocusStrip content={data.focus.content} />
+            </div>
+          )}
+
           {/* Tasks — top left, spans 2 cols */}
-          <section style={{ gridColumn: "1 / 3", gridRow: "1" }}>
+          <section style={{ gridColumn: "1 / 3", marginBottom: 28 }}>
             <div
               style={{
                 color: "#555",
@@ -142,8 +146,8 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
 
-          {/* Calendar — top right, spans both rows */}
-          <section style={{ gridColumn: "3", gridRow: "1 / 3" }}>
+          {/* Calendar — right column, spans all rows */}
+          <section style={{ gridColumn: "3", gridRow: "1 / -1" }}>
             <div
               style={{
                 color: "#555",
