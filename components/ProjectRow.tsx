@@ -23,18 +23,18 @@ export default function ProjectRow({ project }: { project: Project }) {
       style={{
         display: "flex",
         alignItems: "center",
-        gap: 15,
-        padding: "9px 0",
+        gap: 12,
+        padding: "7px 0",
         borderBottom: "1px solid #111",
       }}
     >
-      <span style={{ flex: 1, color: "#c8c8c8", fontSize: "17px" }}>
+      <span style={{ flex: 1, color: "#c8c8c8", fontSize: "14px" }}>
         {project.name}
       </span>
       <div
         style={{
-          width: 88,
-          height: 5,
+          width: 70,
+          height: 4,
           background: "#1a1a1a",
           borderRadius: 2,
           overflow: "hidden",
@@ -51,20 +51,20 @@ export default function ProjectRow({ project }: { project: Project }) {
       </div>
       <span
         style={{
-          width: 42,
+          width: 34,
           textAlign: "right",
           color: "#333",
-          fontSize: "15px",
+          fontSize: "12px",
         }}
       >
         {project.progress}%
       </span>
       <span
         style={{
-          fontSize: "14px",
-          padding: "2px 8px",
+          fontSize: "11px",
+          padding: "1px 6px",
           borderRadius: 2,
-          lineHeight: "24px",
+          lineHeight: "20px",
           background: config.bg,
           color: config.color,
         }}

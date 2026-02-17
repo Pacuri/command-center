@@ -29,9 +29,9 @@ const PRIORITY_CONFIG: Record<
     dimColor: "#884444",
     bgColor: "#3a1a1a",
     statusIcon: "●",
-    fontSize: "20px",
+    fontSize: "16px",
     fontWeight: 600,
-    padding: "12px 8px",
+    padding: "10px 6px",
     showDesc: true,
   },
   high: {
@@ -39,9 +39,9 @@ const PRIORITY_CONFIG: Record<
     dimColor: "#887744",
     bgColor: "#2a2510",
     statusIcon: "◐",
-    fontSize: "19px",
+    fontSize: "15px",
     fontWeight: 500,
-    padding: "10px 8px",
+    padding: "8px 6px",
     showDesc: true,
   },
   normal: {
@@ -49,9 +49,9 @@ const PRIORITY_CONFIG: Record<
     dimColor: "#555",
     bgColor: "#1a2030",
     statusIcon: "○",
-    fontSize: "17px",
+    fontSize: "14px",
     fontWeight: 400,
-    padding: "8px 8px",
+    padding: "6px 6px",
     showDesc: false,
   },
   low: {
@@ -59,9 +59,9 @@ const PRIORITY_CONFIG: Record<
     dimColor: "#333",
     bgColor: "transparent",
     statusIcon: "○",
-    fontSize: "16px",
+    fontSize: "13px",
     fontWeight: 400,
-    padding: "5px 8px",
+    padding: "4px 6px",
     showDesc: false,
   },
 };
@@ -93,7 +93,7 @@ export default function TaskRow({
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: 12,
+        gap: 10,
         padding: config.padding,
         borderBottom: "1px solid #111",
         cursor: "pointer",
@@ -109,11 +109,11 @@ export default function TaskRow({
     >
       <span
         style={{
-          width: 30,
+          width: 24,
           textAlign: "right",
           color: task.priority === "urgent" ? "#ef4444" : "#333",
           flexShrink: 0,
-          fontSize: task.priority === "low" ? "15px" : "17px",
+          fontSize: task.priority === "low" ? "12px" : "14px",
         }}
       >
         {index}
@@ -121,11 +121,11 @@ export default function TaskRow({
 
       <span
         style={{
-          width: 20,
+          width: 16,
           flexShrink: 0,
           color: config.color,
           cursor: "pointer",
-          fontSize: "17px",
+          fontSize: "14px",
         }}
         onClick={(e) => {
           e.stopPropagation();
@@ -149,7 +149,7 @@ export default function TaskRow({
           <div
             style={{
               color: config.dimColor,
-              fontSize: "16px",
+              fontSize: "13px",
               marginTop: 2,
             }}
           >
@@ -162,17 +162,17 @@ export default function TaskRow({
         style={{
           display: "flex",
           alignItems: "flex-start",
-          gap: 12,
+          gap: 10,
           flexShrink: 0,
         }}
       >
         {task.category && (
           <span
             style={{
-              fontSize: "14px",
-              padding: "2px 8px",
+              fontSize: "11px",
+              padding: "1px 6px",
               borderRadius: 2,
-              lineHeight: "24px",
+              lineHeight: "20px",
               fontWeight: 500,
               background: config.bgColor,
               color: config.color,
@@ -184,7 +184,7 @@ export default function TaskRow({
         <span
           style={{
             color: isToday && task.priority === "urgent" ? "#ef4444" : "#333",
-            fontSize: "16px",
+            fontSize: "13px",
           }}
         >
           {formatDue(task.dueDate)}
