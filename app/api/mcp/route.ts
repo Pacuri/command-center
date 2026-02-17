@@ -9,6 +9,7 @@ import {
   pushInbox,
   setFocus,
   getDashboardSummary,
+  agentHeartbeat,
 } from "@/lib/queries";
 import { sendNotification } from "@/lib/notify";
 import { verifyMcpAuth } from "@/lib/auth";
@@ -222,6 +223,8 @@ export async function POST(request: NextRequest) {
   if (method === "tools/call") {
     const { name, arguments: args } = body.params;
     try {
+      // Heartbeat: mark agent as active on every tool call
+      agentHeartbeat().catch(() => {});
       const result = await executeTool(name, args || {});
       return NextResponse.json({
         jsonrpc: "2.0",

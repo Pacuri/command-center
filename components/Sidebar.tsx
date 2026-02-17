@@ -12,7 +12,7 @@ const NAV_ITEMS = [
 
 const SECONDARY = [{ href: "/inbox", icon: "▽", label: "Inbox" }];
 
-export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
+export default function Sidebar({ inboxCount, agentActive }: { inboxCount?: number; agentActive?: boolean }) {
   const pathname = usePathname();
 
   return (
@@ -98,6 +98,47 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
       ))}
 
       <div style={{ flex: 1 }} />
+
+      {/* Avatar with active glow */}
+      <div
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          marginBottom: 2,
+          position: "relative",
+        }}
+      >
+        {agentActive && (
+          <style>{`
+            @keyframes agent-pulse {
+              0%, 100% { box-shadow: 0 0 4px 1px rgba(74, 222, 128, 0.4); }
+              50% { box-shadow: 0 0 10px 3px rgba(74, 222, 128, 0.7); }
+            }
+          `}</style>
+        )}
+        <div
+          style={{
+            width: 28,
+            height: 28,
+            borderRadius: "50%",
+            overflow: "hidden",
+            border: agentActive ? "1.5px solid #4ade80" : "1px solid #1a1a1a",
+            animation: agentActive ? "agent-pulse 2s ease-in-out infinite" : "none",
+            transition: "border-color 0.3s ease",
+          }}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="https://sacwbhhusphqzsaoyhit.supabase.co/storage/v1/object/public/identity/avatar.png"
+            alt="avatar"
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        </div>
+      </div>
     </nav>
   );
 }

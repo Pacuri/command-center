@@ -253,16 +253,37 @@ export async function setFocus(content: string) {
   return f;
 }
 
+// ── Agent Status ──
+
+export async function agentHeartbeat() {
+  await db.execute(
+    sql`UPDATE agent_status SET active = true, last_active = now() WHERE id = 1`
+  );
+}
+
+export async function getAgentActive(): Promise<boolean> {
+  const result = await db.execute(
+    sql`SELECT active, last_active FROM agent_status WHERE id = 1`
+  );
+  const row = (result as any).rows?.[0];
+  if (!row) return false;
+  // Consider inactive if no heartbeat in 30 seconds
+  const lastActive = new Date(row.last_active);
+  const stale = Date.now() - lastActive.getTime() > 30000;
+  return row.active && !stale;
+}
+
 // ── Dashboard Summary ──
 
 export async function getDashboardSummary() {
-  const [openTasks, todayEvents, activeProjects, unreadItems, currentFocus] =
+  const [openTasks, todayEvents, activeProjects, unreadItems, currentFocus, agentActive] =
     await Promise.all([
       getOpenTasks(),
       getEvents(new Date().toISOString().split("T")[0]),
       getActiveProjects(),
       getUnreadInbox(),
       getCurrentFocus(),
+      getAgentActive(),
     ]);
 
   const today = new Date().toISOString().split("T")[0];
@@ -275,6 +296,7 @@ export async function getDashboardSummary() {
     projects: activeProjects,
     inbox: unreadItems,
     focus: currentFocus,
+    agentActive,
     counts: {
       openTasks: openTasks.length,
       dueToday: openTasks.filter((t) => t.dueDate === today).length,

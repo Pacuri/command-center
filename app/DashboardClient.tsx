@@ -16,6 +16,7 @@ interface DashboardData {
   projects: any[];
   inbox: any[];
   focus: { content: string } | null;
+  agentActive?: boolean;
   counts: {
     openTasks: number;
     dueToday: number;
@@ -73,40 +74,36 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
 
   return (
     <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar inboxCount={data.counts.unreadInbox} />
+      <Sidebar inboxCount={data.counts.unreadInbox} agentActive={data.agentActive} />
 
-      {/* Main area with calendar to the right */}
+      {/* Content area */}
       <div
         style={{
           flex: 1,
-          display: "flex",
           padding: "24px 32px 64px",
           overflowY: "auto",
-          gap: 32,
         }}
       >
-        {/* Left: all main content */}
-        <main style={{ maxWidth: 960, flex: 1, minWidth: 0 }}>
-          {/* Prompt */}
+        {/* Prompt + Date + Focus — full width above tasks row */}
+        <div style={{ maxWidth: 960 }}>
           <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
             <span style={{ color: "#4ade80" }}>nikola</span>
             <span style={{ color: "#333" }}>@cc</span>{" "}
             <span>~/overview</span>
           </div>
-          <div
-            style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
-          >
+          <div style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}>
             {dateStr} · {data.counts.dueToday} due today ·{" "}
             {data.counts.todayEvents} meeting
             {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
             {data.counts.unreadInbox} inbox
           </div>
-
-          {/* Focus */}
           {data.focus && <FocusStrip content={data.focus.content} />}
+        </div>
 
+        {/* Tasks + Calendar row — calendar aligns with tasks top */}
+        <div style={{ display: "flex", gap: 32, marginBottom: 28 }}>
           {/* Tasks */}
-          <section style={{ marginBottom: 28 }}>
+          <section style={{ maxWidth: 960, flex: 1, minWidth: 0 }}>
             <div
               style={{
                 color: "#555",
@@ -138,9 +135,27 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
 
-          {/* Projects + Inbox row */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-          {/* Projects */}
+          {/* Calendar — aligned with tasks top */}
+          <aside style={{ width: 198, flexShrink: 0, alignSelf: "flex-start" }}>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 10,
+              }}
+            >
+              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
+            </div>
+            <Calendar events={data.upcomingEvents} />
+          </aside>
+        </div>
+
+        {/* Projects + Inbox row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32, maxWidth: 960 }}>
           <section>
             <div
               style={{
@@ -162,15 +177,12 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
               <ProjectRow key={project.id} project={project} />
             ))}
             {data.projects.length === 0 && (
-              <div
-                style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}
-              >
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
                 no active projects
               </div>
             )}
           </section>
 
-          {/* Inbox */}
           <section>
             <div
               style={{
@@ -202,25 +214,6 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
         </div>
-        </main>
-
-        {/* Calendar — right side, outside main content width */}
-        <aside style={{ width: 180, flexShrink: 0 }}>
-          <div
-            style={{
-              color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              padding: "6px 0 10px",
-              borderBottom: "1px solid #1a1a1a",
-              marginBottom: 10,
-            }}
-          >
-            ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
-          </div>
-          <Calendar events={data.upcomingEvents} />
-        </aside>
       </div>
 
       <StatusBar counts={data.counts} />
