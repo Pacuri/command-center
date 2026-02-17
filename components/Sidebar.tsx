@@ -18,14 +18,14 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
   return (
     <nav
       style={{
-        width: 44,
+        width: 52,
         background: "#0a0a0a",
         borderRight: "1px solid #1a1a1a",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "12px 0",
-        gap: 4,
+        padding: "14px 0",
+        gap: 6,
         flexShrink: 0,
       }}
     >
@@ -35,13 +35,13 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
           href={item.href}
           title={item.label}
           style={{
-            width: 30,
-            height: 30,
+            width: 36,
+            height: 36,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 4,
-            fontSize: 13,
+            fontSize: 16,
             color: pathname === item.href ? "#4ade80" : "#555",
             background: pathname === item.href ? "#151515" : "transparent",
             textDecoration: "none",
@@ -54,7 +54,7 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
 
       <div
         style={{
-          width: 20,
+          width: 24,
           height: 1,
           background: "#1a1a1a",
           margin: "4px 0",
@@ -67,13 +67,13 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
           href={item.href}
           title={item.label}
           style={{
-            width: 30,
-            height: 30,
+            width: 36,
+            height: 36,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 4,
-            fontSize: 13,
+            fontSize: 16,
             color: pathname === item.href ? "#4ade80" : "#555",
             background: pathname === item.href ? "#151515" : "transparent",
             textDecoration: "none",
@@ -85,10 +85,10 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
             <span
               style={{
                 position: "absolute",
-                top: -1,
-                right: -1,
-                width: 6,
-                height: 6,
+                top: 0,
+                right: 0,
+                width: 7,
+                height: 7,
                 background: "#ef4444",
                 borderRadius: "50%",
               }}

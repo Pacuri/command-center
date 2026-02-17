@@ -19,11 +19,6 @@ function getFirstDayOfMonth(year: number, month: number) {
   return day === 0 ? 6 : day - 1; // Monday = 0
 }
 
-const MONTH_NAMES = [
-  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-];
-
 function formatTime(time: string | null | undefined): string {
   if (!time) return "";
   const [h, m] = time.split(":");
@@ -41,35 +36,29 @@ export default function Calendar({ events }: { events: Event[] }) {
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = getFirstDayOfMonth(year, month);
 
-  // Previous month padding
   const prevMonth = month === 1 ? 12 : month - 1;
   const prevYear = month === 1 ? year - 1 : year;
   const prevDays = getDaysInMonth(prevYear, prevMonth);
 
-  // Event dates set
   const eventDates = new Set(events.map((e) => e.eventDate));
 
-  // Today's events
   const todayEvents = events
     .filter((e) => e.eventDate === todayStr)
     .sort((a, b) => (a.eventTime || "").localeCompare(b.eventTime || ""));
 
   const days: Array<{ day: number; current: boolean; date: string }> = [];
 
-  // Previous month trailing days
   for (let i = firstDay - 1; i >= 0; i--) {
     const d = prevDays - i;
     const dateStr = `${prevYear}-${String(prevMonth).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     days.push({ day: d, current: false, date: dateStr });
   }
 
-  // Current month
   for (let d = 1; d <= daysInMonth; d++) {
     const dateStr = `${year}-${String(month).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
     days.push({ day: d, current: true, date: dateStr });
   }
 
-  // Next month leading days
   const remaining = 7 - (days.length % 7);
   if (remaining < 7) {
     const nextMonth = month === 12 ? 1 : month + 1;
@@ -87,7 +76,7 @@ export default function Calendar({ events }: { events: Event[] }) {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          marginBottom: 2,
+          marginBottom: 4,
         }}
       >
         {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map((d) => (
@@ -95,9 +84,9 @@ export default function Calendar({ events }: { events: Event[] }) {
             key={d}
             style={{
               textAlign: "center",
-              fontSize: "10px",
-              color: "#333",
-              padding: "2px 0",
+              fontSize: "12px",
+              color: "#555",
+              padding: "3px 0",
               letterSpacing: "0.5px",
             }}
           >
@@ -111,7 +100,7 @@ export default function Calendar({ events }: { events: Event[] }) {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 1,
+          gap: 2,
         }}
       >
         {days.map((d, i) => {
@@ -123,13 +112,13 @@ export default function Calendar({ events }: { events: Event[] }) {
               key={i}
               style={{
                 textAlign: "center",
-                padding: "6px 0",
-                fontSize: "11px",
+                padding: "7px 0",
+                fontSize: "13px",
                 color: !d.current
                   ? "#1a1a1a"
                   : isToday
                     ? "#0a0a0a"
-                    : "#333",
+                    : "#555",
                 background: isToday
                   ? "#4ade80"
                   : d.current && hasEvent
@@ -149,8 +138,8 @@ export default function Calendar({ events }: { events: Event[] }) {
                     bottom: 2,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: 3,
-                    height: 3,
+                    width: 4,
+                    height: 4,
                     borderRadius: "50%",
                     background: "#ef4444",
                   }}
@@ -163,8 +152,8 @@ export default function Calendar({ events }: { events: Event[] }) {
                     bottom: 2,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: 3,
-                    height: 3,
+                    width: 4,
+                    height: 4,
                     borderRadius: "50%",
                     background: "#0a0a0a",
                   }}
@@ -179,18 +168,18 @@ export default function Calendar({ events }: { events: Event[] }) {
       {todayEvents.length > 0 && (
         <div
           style={{
-            marginTop: 10,
-            paddingTop: 8,
+            marginTop: 12,
+            paddingTop: 10,
             borderTop: "1px solid #1a1a1a",
           }}
         >
           <div
             style={{
-              fontSize: "10px",
-              color: "#333",
+              fontSize: "12px",
+              color: "#555",
               letterSpacing: "1px",
               textTransform: "uppercase",
-              marginBottom: 4,
+              marginBottom: 6,
             }}
           >
             today
@@ -200,16 +189,16 @@ export default function Calendar({ events }: { events: Event[] }) {
               key={event.id}
               style={{
                 display: "flex",
-                gap: 8,
-                padding: "3px 0",
-                fontSize: "11px",
+                gap: 10,
+                padding: "4px 0",
+                fontSize: "13px",
               }}
             >
               <span
                 style={{
-                  width: 40,
+                  width: 44,
                   textAlign: "right",
-                  color: "#333",
+                  color: "#555",
                   flexShrink: 0,
                 }}
               >
@@ -217,7 +206,7 @@ export default function Calendar({ events }: { events: Event[] }) {
               </span>
               <div
                 style={{
-                  width: 2,
+                  width: 3,
                   flexShrink: 0,
                   borderRadius: 1,
                   alignSelf: "stretch",

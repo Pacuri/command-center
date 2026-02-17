@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState, useCallback } from "react";
 import Sidebar from "@/components/Sidebar";
 import StatusBar from "@/components/StatusBar";
 import FocusStrip from "@/components/FocusStrip";
@@ -7,7 +8,6 @@ import TaskRow from "@/components/TaskRow";
 import Calendar from "@/components/Calendar";
 import ProjectRow from "@/components/ProjectRow";
 import InboxRow from "@/components/InboxRow";
-import { useRouter } from "next/navigation";
 
 interface DashboardData {
   tasks: any[];
@@ -25,8 +25,26 @@ interface DashboardData {
   };
 }
 
-export default function DashboardClient({ data }: { data: DashboardData }) {
-  const router = useRouter();
+export default function DashboardClient({ data: initialData }: { data: DashboardData }) {
+  const [data, setData] = useState<DashboardData>(initialData);
+
+  const fetchData = useCallback(async () => {
+    try {
+      const res = await fetch("/api/dashboard", { cache: "no-store" });
+      if (res.ok) {
+        const fresh = await res.json();
+        setData(fresh);
+      }
+    } catch {
+      // silent fail, keep showing last data
+    }
+  }, []);
+
+  // Poll every 5 seconds
+  useEffect(() => {
+    const interval = setInterval(fetchData, 5000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   const now = new Date();
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -42,7 +60,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: "done" }),
     });
-    router.refresh();
+    fetchData();
   };
 
   const handleMarkRead = async (id: number) => {
@@ -50,7 +68,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
     });
-    router.refresh();
+    fetchData();
   };
 
   return (
@@ -60,19 +78,19 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
       <main
         style={{
           flex: 1,
-          padding: "20px 28px 60px",
+          padding: "24px 32px 64px",
           overflowY: "auto",
-          maxWidth: 920,
+          maxWidth: 960,
         }}
       >
         {/* Prompt */}
-        <div style={{ color: "#555", marginBottom: 4, fontSize: "12px" }}>
+        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
           <span style={{ color: "#4ade80" }}>nikola</span>
           <span style={{ color: "#333" }}>@cc</span>{" "}
           <span>~/overview</span>
         </div>
         <div
-          style={{ marginBottom: 12, color: "#333", fontSize: "12px" }}
+          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
         >
           {dateStr} · {data.counts.dueToday} due today ·{" "}
           {data.counts.todayEvents} meeting
@@ -84,16 +102,16 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
         {data.focus && <FocusStrip content={data.focus.content} />}
 
         {/* Tasks */}
-        <section style={{ marginBottom: 24 }}>
+        <section style={{ marginBottom: 28 }}>
           <div
             style={{
-              color: "#333",
-              fontSize: "10px",
+              color: "#555",
+              fontSize: "12px",
               letterSpacing: "1.5px",
               textTransform: "uppercase",
-              padding: "4px 0 8px",
+              padding: "6px 0 10px",
               borderBottom: "1px solid #1a1a1a",
-              marginBottom: 2,
+              marginBottom: 4,
               display: "flex",
               justifyContent: "space-between",
             }}
@@ -110,7 +128,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             />
           ))}
           {data.tasks.length === 0 && (
-            <div style={{ color: "#333", padding: "8px 0", fontSize: "11px" }}>
+            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
               no open tasks
             </div>
           )}
@@ -121,20 +139,20 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 28,
+            gap: 32,
           }}
         >
           {/* Calendar */}
-          <section style={{ marginBottom: 24 }}>
+          <section style={{ marginBottom: 28 }}>
             <div
               style={{
-                color: "#333",
-                fontSize: "10px",
+                color: "#555",
+                fontSize: "12px",
                 letterSpacing: "1.5px",
                 textTransform: "uppercase",
-                padding: "4px 0 8px",
+                padding: "6px 0 10px",
                 borderBottom: "1px solid #1a1a1a",
-                marginBottom: 8,
+                marginBottom: 10,
               }}
             >
               ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
@@ -143,16 +161,16 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
           </section>
 
           {/* Projects */}
-          <section style={{ marginBottom: 24 }}>
+          <section style={{ marginBottom: 28 }}>
             <div
               style={{
-                color: "#333",
-                fontSize: "10px",
+                color: "#555",
+                fontSize: "12px",
                 letterSpacing: "1.5px",
                 textTransform: "uppercase",
-                padding: "4px 0 8px",
+                padding: "6px 0 10px",
                 borderBottom: "1px solid #1a1a1a",
-                marginBottom: 2,
+                marginBottom: 4,
                 display: "flex",
                 justifyContent: "space-between",
               }}
@@ -165,7 +183,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             ))}
             {data.projects.length === 0 && (
               <div
-                style={{ color: "#333", padding: "8px 0", fontSize: "11px" }}
+                style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}
               >
                 no active projects
               </div>
@@ -174,16 +192,16 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
         </div>
 
         {/* Inbox */}
-        <section style={{ marginBottom: 24 }}>
+        <section style={{ marginBottom: 28 }}>
           <div
             style={{
-              color: "#333",
-              fontSize: "10px",
+              color: "#555",
+              fontSize: "12px",
               letterSpacing: "1.5px",
               textTransform: "uppercase",
-              padding: "4px 0 8px",
+              padding: "6px 0 10px",
               borderBottom: "1px solid #1a1a1a",
-              marginBottom: 2,
+              marginBottom: 4,
               display: "flex",
               justifyContent: "space-between",
             }}
@@ -199,7 +217,7 @@ export default function DashboardClient({ data }: { data: DashboardData }) {
             />
           ))}
           {data.inbox.length === 0 && (
-            <div style={{ color: "#333", padding: "8px 0", fontSize: "11px" }}>
+            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
               inbox clear
             </div>
           )}
