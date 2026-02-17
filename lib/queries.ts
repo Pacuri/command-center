@@ -256,21 +256,29 @@ export async function setFocus(content: string) {
 // ── Agent Status ──
 
 export async function agentHeartbeat() {
-  await db.execute(
-    sql`UPDATE agent_status SET active = true, last_active = now() WHERE id = 1`
-  );
+  try {
+    await db.execute(
+      sql`UPDATE agent_status SET active = true, last_active = now() WHERE id = 1`
+    );
+  } catch {
+    // Table may not exist yet — ignore silently
+  }
 }
 
 export async function getAgentActive(): Promise<boolean> {
-  const result = await db.execute(
-    sql`SELECT active, last_active FROM agent_status WHERE id = 1`
-  );
-  const row = (result as any).rows?.[0];
-  if (!row) return false;
-  // Consider inactive if no heartbeat in 30 seconds
-  const lastActive = new Date(row.last_active);
-  const stale = Date.now() - lastActive.getTime() > 30000;
-  return row.active && !stale;
+  try {
+    const result = await db.execute(
+      sql`SELECT active, last_active FROM agent_status WHERE id = 1`
+    );
+    const row = (result as any).rows?.[0];
+    if (!row) return false;
+    // Consider inactive if no heartbeat in 30 seconds
+    const lastActive = new Date(row.last_active);
+    const stale = Date.now() - lastActive.getTime() > 30000;
+    return row.active && !stale;
+  } catch {
+    return false;
+  }
 }
 
 // ── Dashboard Summary ──
