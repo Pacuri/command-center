@@ -75,73 +75,73 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar inboxCount={data.counts.unreadInbox} />
 
-      <main
+      {/* Main content + Calendar sidebar */}
+      <div
         style={{
           flex: 1,
-          padding: "24px 32px 64px",
+          display: "flex",
           overflowY: "auto",
-          maxWidth: 960,
         }}
       >
-        {/* Prompt */}
-        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
-          <span style={{ color: "#4ade80" }}>nikola</span>
-          <span style={{ color: "#333" }}>@cc</span>{" "}
-          <span>~/overview</span>
-        </div>
-        <div
-          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
-        >
-          {dateStr} · {data.counts.dueToday} due today ·{" "}
-          {data.counts.todayEvents} meeting
-          {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
-          {data.counts.unreadInbox} inbox
-        </div>
-
-        {/* Focus */}
-        {data.focus && <FocusStrip content={data.focus.content} />}
-
-        {/* Tasks */}
-        <section style={{ marginBottom: 28 }}>
-          <div
-            style={{
-              color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              padding: "6px 0 10px",
-              borderBottom: "1px solid #1a1a1a",
-              marginBottom: 4,
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>── tasks ──</span>
-            <span>{data.counts.openTasks} open</span>
-          </div>
-          {data.tasks.map((task, i) => (
-            <TaskRow
-              key={task.id}
-              task={task}
-              index={i + 1}
-              onComplete={handleComplete}
-            />
-          ))}
-          {data.tasks.length === 0 && (
-            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-              no open tasks
-            </div>
-          )}
-        </section>
-
-        {/* Two-column: Projects + Calendar */}
-        <div
+        {/* Left: main content */}
+        <main
           style={{
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: 32,
+            flex: 1,
+            padding: "24px 32px 64px",
+            maxWidth: 640,
           }}
         >
+          {/* Prompt */}
+          <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
+            <span style={{ color: "#4ade80" }}>nikola</span>
+            <span style={{ color: "#333" }}>@cc</span>{" "}
+            <span>~/overview</span>
+          </div>
+          <div
+            style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+          >
+            {dateStr} · {data.counts.dueToday} due today ·{" "}
+            {data.counts.todayEvents} meeting
+            {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
+            {data.counts.unreadInbox} inbox
+          </div>
+
+          {/* Focus */}
+          {data.focus && <FocusStrip content={data.focus.content} />}
+
+          {/* Tasks */}
+          <section style={{ marginBottom: 28 }}>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>── tasks ──</span>
+              <span>{data.counts.openTasks} open</span>
+            </div>
+            {data.tasks.map((task, i) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                index={i + 1}
+                onComplete={handleComplete}
+              />
+            ))}
+            {data.tasks.length === 0 && (
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+                no open tasks
+              </div>
+            )}
+          </section>
+
           {/* Projects */}
           <section style={{ marginBottom: 28 }}>
             <div
@@ -172,7 +172,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             )}
           </section>
 
-          {/* Calendar */}
+          {/* Inbox */}
           <section style={{ marginBottom: 28 }}>
             <div
               style={{
@@ -182,17 +182,39 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
                 textTransform: "uppercase",
                 padding: "6px 0 10px",
                 borderBottom: "1px solid #1a1a1a",
-                marginBottom: 10,
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
               }}
             >
-              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
+              <span>── inbox ──</span>
+              <span>{data.counts.unreadInbox} new</span>
             </div>
-            <Calendar events={data.upcomingEvents} />
+            {data.inbox.map((item) => (
+              <InboxRow
+                key={item.id}
+                item={item}
+                onMarkRead={handleMarkRead}
+              />
+            ))}
+            {data.inbox.length === 0 && (
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+                inbox clear
+              </div>
+            )}
           </section>
-        </div>
+        </main>
 
-        {/* Inbox */}
-        <section style={{ marginBottom: 28 }}>
+        {/* Right: Calendar sidebar */}
+        <aside
+          style={{
+            width: 280,
+            flexShrink: 0,
+            padding: "24px 24px 64px 0",
+            borderLeft: "1px solid #1a1a1a",
+            paddingLeft: 24,
+          }}
+        >
           <div
             style={{
               color: "#555",
@@ -201,28 +223,14 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
               textTransform: "uppercase",
               padding: "6px 0 10px",
               borderBottom: "1px solid #1a1a1a",
-              marginBottom: 4,
-              display: "flex",
-              justifyContent: "space-between",
+              marginBottom: 10,
             }}
           >
-            <span>── inbox ──</span>
-            <span>{data.counts.unreadInbox} new</span>
+            ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
           </div>
-          {data.inbox.map((item) => (
-            <InboxRow
-              key={item.id}
-              item={item}
-              onMarkRead={handleMarkRead}
-            />
-          ))}
-          {data.inbox.length === 0 && (
-            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-              inbox clear
-            </div>
-          )}
-        </section>
-      </main>
+          <Calendar events={data.upcomingEvents} />
+        </aside>
+      </div>
 
       <StatusBar counts={data.counts} />
     </div>
