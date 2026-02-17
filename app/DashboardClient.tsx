@@ -78,19 +78,19 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
       <main
         style={{
           flex: 1,
-          padding: "24px 32px 64px",
+          padding: "30px 40px 80px",
           overflowY: "auto",
-          maxWidth: 960,
+          maxWidth: 1200,
         }}
       >
         {/* Prompt */}
-        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
+        <div style={{ color: "#555", marginBottom: 8, fontSize: "17px" }}>
           <span style={{ color: "#4ade80" }}>nikola</span>
           <span style={{ color: "#333" }}>@cc</span>{" "}
           <span>~/overview</span>
         </div>
         <div
-          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+          style={{ marginBottom: 20, color: "#555", fontSize: "16px" }}
         >
           {dateStr} · {data.counts.dueToday} due today ·{" "}
           {data.counts.todayEvents} meeting
@@ -102,14 +102,14 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
         {data.focus && <FocusStrip content={data.focus.content} />}
 
         {/* Tasks */}
-        <section style={{ marginBottom: 28 }}>
+        <section style={{ marginBottom: 35 }}>
           <div
             style={{
               color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
+              fontSize: "15px",
+              letterSpacing: "2px",
               textTransform: "uppercase",
-              padding: "6px 0 10px",
+              padding: "8px 0 12px",
               borderBottom: "1px solid #1a1a1a",
               marginBottom: 4,
               display: "flex",
@@ -128,7 +128,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             />
           ))}
           {data.tasks.length === 0 && (
-            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+            <div style={{ color: "#333", padding: "12px 0", fontSize: "16px" }}>
               no open tasks
             </div>
           )}
@@ -139,20 +139,20 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: 32,
+            gap: 40,
           }}
         >
           {/* Calendar */}
-          <section style={{ marginBottom: 28 }}>
+          <section style={{ marginBottom: 35 }}>
             <div
               style={{
                 color: "#555",
-                fontSize: "12px",
-                letterSpacing: "1.5px",
+                fontSize: "15px",
+                letterSpacing: "2px",
                 textTransform: "uppercase",
-                padding: "6px 0 10px",
+                padding: "8px 0 12px",
                 borderBottom: "1px solid #1a1a1a",
-                marginBottom: 10,
+                marginBottom: 12,
               }}
             >
               ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
@@ -161,14 +161,14 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           </section>
 
           {/* Projects */}
-          <section style={{ marginBottom: 28 }}>
+          <section style={{ marginBottom: 35 }}>
             <div
               style={{
                 color: "#555",
-                fontSize: "12px",
-                letterSpacing: "1.5px",
+                fontSize: "15px",
+                letterSpacing: "2px",
                 textTransform: "uppercase",
-                padding: "6px 0 10px",
+                padding: "8px 0 12px",
                 borderBottom: "1px solid #1a1a1a",
                 marginBottom: 4,
                 display: "flex",
@@ -183,7 +183,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             ))}
             {data.projects.length === 0 && (
               <div
-                style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}
+                style={{ color: "#333", padding: "12px 0", fontSize: "16px" }}
               >
                 no active projects
               </div>
@@ -192,14 +192,14 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
         </div>
 
         {/* Inbox */}
-        <section style={{ marginBottom: 28 }}>
+        <section style={{ marginBottom: 35 }}>
           <div
             style={{
               color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
+              fontSize: "15px",
+              letterSpacing: "2px",
               textTransform: "uppercase",
-              padding: "6px 0 10px",
+              padding: "8px 0 12px",
               borderBottom: "1px solid #1a1a1a",
               marginBottom: 4,
               display: "flex",
@@ -217,7 +217,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             />
           ))}
           {data.inbox.length === 0 && (
-            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+            <div style={{ color: "#333", padding: "12px 0", fontSize: "16px" }}>
               inbox clear
             </div>
           )}

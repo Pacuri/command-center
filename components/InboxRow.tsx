@@ -37,8 +37,8 @@ export default function InboxRow({
       style={{
         display: "flex",
         alignItems: "flex-start",
-        gap: 10,
-        padding: "7px 0",
+        gap: 12,
+        padding: "9px 0",
         borderBottom: "1px solid #111",
         cursor: "pointer",
         opacity: item.read ? 0.5 : 1,
@@ -49,11 +49,11 @@ export default function InboxRow({
     >
       <span
         style={{
-          fontSize: "11px",
+          fontSize: "14px",
           fontWeight: 600,
-          padding: "1px 5px",
+          padding: "2px 7px",
           borderRadius: 2,
-          lineHeight: "20px",
+          lineHeight: "24px",
           flexShrink: 0,
           background: isAgent ? "#1f1530" : "#1a1a1a",
           color: isAgent ? "#8b5cf6" : "#555",
@@ -62,14 +62,14 @@ export default function InboxRow({
         {isAgent ? "AGT" : "SYS"}
       </span>
       <div style={{ flex: 1 }}>
-        <div style={{ color: "#c8c8c8", fontSize: "14px" }}>{item.title}</div>
+        <div style={{ color: "#c8c8c8", fontSize: "17px" }}>{item.title}</div>
         {item.description && (
-          <div style={{ color: "#555", fontSize: "13px", marginTop: 1 }}>
+          <div style={{ color: "#555", fontSize: "16px", marginTop: 1 }}>
             {item.description}
           </div>
         )}
       </div>
-      <span style={{ color: "#333", fontSize: "12px", flexShrink: 0 }}>
+      <span style={{ color: "#333", fontSize: "15px", flexShrink: 0 }}>
         {timeAgo(item.createdAt)}
       </span>
     </div>

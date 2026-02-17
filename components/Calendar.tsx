@@ -84,9 +84,9 @@ export default function Calendar({ events }: { events: Event[] }) {
             key={d}
             style={{
               textAlign: "center",
-              fontSize: "12px",
+              fontSize: "15px",
               color: "#555",
-              padding: "3px 0",
+              padding: "4px 0",
               letterSpacing: "0.5px",
             }}
           >
@@ -100,7 +100,7 @@ export default function Calendar({ events }: { events: Event[] }) {
         style={{
           display: "grid",
           gridTemplateColumns: "repeat(7, 1fr)",
-          gap: 2,
+          gap: 3,
         }}
       >
         {days.map((d, i) => {
@@ -112,8 +112,8 @@ export default function Calendar({ events }: { events: Event[] }) {
               key={i}
               style={{
                 textAlign: "center",
-                padding: "7px 0",
-                fontSize: "13px",
+                padding: "9px 0",
+                fontSize: "16px",
                 color: !d.current
                   ? "#1a1a1a"
                   : isToday
@@ -138,8 +138,8 @@ export default function Calendar({ events }: { events: Event[] }) {
                     bottom: 2,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: 4,
-                    height: 4,
+                    width: 5,
+                    height: 5,
                     borderRadius: "50%",
                     background: "#ef4444",
                   }}
@@ -152,8 +152,8 @@ export default function Calendar({ events }: { events: Event[] }) {
                     bottom: 2,
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: 4,
-                    height: 4,
+                    width: 5,
+                    height: 5,
                     borderRadius: "50%",
                     background: "#0a0a0a",
                   }}
@@ -168,18 +168,18 @@ export default function Calendar({ events }: { events: Event[] }) {
       {todayEvents.length > 0 && (
         <div
           style={{
-            marginTop: 12,
-            paddingTop: 10,
+            marginTop: 15,
+            paddingTop: 12,
             borderTop: "1px solid #1a1a1a",
           }}
         >
           <div
             style={{
-              fontSize: "12px",
+              fontSize: "15px",
               color: "#555",
               letterSpacing: "1px",
               textTransform: "uppercase",
-              marginBottom: 6,
+              marginBottom: 8,
             }}
           >
             today
@@ -189,14 +189,14 @@ export default function Calendar({ events }: { events: Event[] }) {
               key={event.id}
               style={{
                 display: "flex",
-                gap: 10,
-                padding: "4px 0",
-                fontSize: "13px",
+                gap: 12,
+                padding: "5px 0",
+                fontSize: "16px",
               }}
             >
               <span
                 style={{
-                  width: 44,
+                  width: 55,
                   textAlign: "right",
                   color: "#555",
                   flexShrink: 0,
@@ -206,7 +206,7 @@ export default function Calendar({ events }: { events: Event[] }) {
               </span>
               <div
                 style={{
-                  width: 3,
+                  width: 4,
                   flexShrink: 0,
                   borderRadius: 1,
                   alignSelf: "stretch",

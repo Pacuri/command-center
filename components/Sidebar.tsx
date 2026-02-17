@@ -18,14 +18,14 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
   return (
     <nav
       style={{
-        width: 52,
+        width: 64,
         background: "#0a0a0a",
         borderRight: "1px solid #1a1a1a",
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        padding: "14px 0",
-        gap: 6,
+        padding: "18px 0",
+        gap: 8,
         flexShrink: 0,
       }}
     >
@@ -35,13 +35,13 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
           href={item.href}
           title={item.label}
           style={{
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 4,
-            fontSize: 16,
+            fontSize: 20,
             color: pathname === item.href ? "#4ade80" : "#555",
             background: pathname === item.href ? "#151515" : "transparent",
             textDecoration: "none",
@@ -54,7 +54,7 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
 
       <div
         style={{
-          width: 24,
+          width: 30,
           height: 1,
           background: "#1a1a1a",
           margin: "4px 0",
@@ -67,13 +67,13 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
           href={item.href}
           title={item.label}
           style={{
-            width: 36,
-            height: 36,
+            width: 44,
+            height: 44,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             borderRadius: 4,
-            fontSize: 16,
+            fontSize: 20,
             color: pathname === item.href ? "#4ade80" : "#555",
             background: pathname === item.href ? "#151515" : "transparent",
             textDecoration: "none",
@@ -87,8 +87,8 @@ export default function Sidebar({ inboxCount }: { inboxCount?: number }) {
                 position: "absolute",
                 top: 0,
                 right: 0,
-                width: 7,
-                height: 7,
+                width: 9,
+                height: 9,
                 background: "#ef4444",
                 borderRadius: "50%",
               }}
