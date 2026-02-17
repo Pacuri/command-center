@@ -11,6 +11,7 @@ import {
   getDashboardSummary,
 } from "@/lib/queries";
 import { sendNotification } from "@/lib/notify";
+import { verifyMcpAuth } from "@/lib/auth";
 
 // MCP tool definitions
 const TOOLS = [
@@ -167,46 +168,45 @@ const TOOLS = [
   },
 ];
 
-function verifyBearer(request: NextRequest): boolean {
-  const auth = request.headers.get("authorization");
-  if (!auth) return false;
-  return auth.replace("Bearer ", "") === process.env.MCP_SECRET;
-}
+const SERVER_INFO = {
+  name: "command-center",
+  version: "0.1.0",
+};
 
 export async function GET(request: NextRequest) {
-  // MCP server info endpoint
-  if (!verifyBearer(request)) {
+  if (!verifyMcpAuth(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   return NextResponse.json({
-    name: "command-center",
-    version: "0.1.0",
+    ...SERVER_INFO,
     description: "Nikola's personal command center dashboard",
     tools: TOOLS,
   });
 }
 
 export async function POST(request: NextRequest) {
-  if (!verifyBearer(request)) {
+  if (!verifyMcpAuth(request)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const body = await request.json();
-  const { method, params } = body;
+  const { method, id: reqId } = body;
+
+  // Notifications have no id and expect no response (but we return 200 to be safe)
+  if (method === "notifications/initialized" || method === "initialized") {
+    return new NextResponse(null, { status: 200 });
+  }
 
   // Handle MCP protocol methods
   if (method === "initialize") {
     return NextResponse.json({
       jsonrpc: "2.0",
-      id: body.id,
+      id: reqId,
       result: {
         protocolVersion: "2024-11-05",
         capabilities: { tools: {} },
-        serverInfo: {
-          name: "command-center",
-          version: "0.1.0",
-        },
+        serverInfo: SERVER_INFO,
       },
     });
   }
@@ -214,18 +214,18 @@ export async function POST(request: NextRequest) {
   if (method === "tools/list") {
     return NextResponse.json({
       jsonrpc: "2.0",
-      id: body.id,
+      id: reqId,
       result: { tools: TOOLS },
     });
   }
 
   if (method === "tools/call") {
-    const { name, arguments: args } = params;
+    const { name, arguments: args } = body.params;
     try {
       const result = await executeTool(name, args || {});
       return NextResponse.json({
         jsonrpc: "2.0",
-        id: body.id,
+        id: reqId,
         result: {
           content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
         },
@@ -233,15 +233,24 @@ export async function POST(request: NextRequest) {
     } catch (e: any) {
       return NextResponse.json({
         jsonrpc: "2.0",
-        id: body.id,
+        id: reqId,
         error: { code: -32000, message: e.message },
       });
     }
   }
 
+  // Ping/pong for health checks
+  if (method === "ping") {
+    return NextResponse.json({
+      jsonrpc: "2.0",
+      id: reqId,
+      result: {},
+    });
+  }
+
   return NextResponse.json({
     jsonrpc: "2.0",
-    id: body.id,
+    id: reqId,
     error: { code: -32601, message: `Unknown method: ${method}` },
   });
 }
