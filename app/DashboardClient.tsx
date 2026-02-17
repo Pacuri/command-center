@@ -82,128 +82,60 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           overflowY: "auto",
         }}
       >
-        {/* Two-column layout: left content + right calendar */}
-        <div style={{ display: "flex", gap: 32 }}>
-          {/* Left column: everything stacked */}
-          <div style={{ flex: 1, minWidth: 0 }}>
-            {/* Prompt */}
-            <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
-              <span style={{ color: "#4ade80" }}>nikola</span>
-              <span style={{ color: "#333" }}>@cc</span>{" "}
-              <span>~/overview</span>
-            </div>
+        {/* Prompt */}
+        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
+          <span style={{ color: "#4ade80" }}>nikola</span>
+          <span style={{ color: "#333" }}>@cc</span>{" "}
+          <span>~/overview</span>
+        </div>
+        <div
+          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+        >
+          {dateStr} · {data.counts.dueToday} due today ·{" "}
+          {data.counts.todayEvents} meeting
+          {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
+          {data.counts.unreadInbox} inbox
+        </div>
+
+        {/* Focus */}
+        {data.focus && <FocusStrip content={data.focus.content} />}
+
+        {/* Tasks + Calendar row */}
+        <div style={{ display: "flex", gap: 32, marginBottom: 28 }}>
+          {/* Tasks */}
+          <section style={{ flex: 1, minWidth: 0 }}>
             <div
-              style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
             >
-              {dateStr} · {data.counts.dueToday} due today ·{" "}
-              {data.counts.todayEvents} meeting
-              {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
-              {data.counts.unreadInbox} inbox
+              <span>── tasks ──</span>
+              <span>{data.counts.openTasks} open</span>
             </div>
-
-            {/* Focus */}
-            {data.focus && <FocusStrip content={data.focus.content} />}
-
-            {/* Tasks */}
-            <section style={{ marginBottom: 28 }}>
-              <div
-                style={{
-                  color: "#555",
-                  fontSize: "12px",
-                  letterSpacing: "1.5px",
-                  textTransform: "uppercase",
-                  padding: "6px 0 10px",
-                  borderBottom: "1px solid #1a1a1a",
-                  marginBottom: 4,
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span>── tasks ──</span>
-                <span>{data.counts.openTasks} open</span>
+            {data.tasks.map((task, i) => (
+              <TaskRow
+                key={task.id}
+                task={task}
+                index={i + 1}
+                onComplete={handleComplete}
+              />
+            ))}
+            {data.tasks.length === 0 && (
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+                no open tasks
               </div>
-              {data.tasks.map((task, i) => (
-                <TaskRow
-                  key={task.id}
-                  task={task}
-                  index={i + 1}
-                  onComplete={handleComplete}
-                />
-              ))}
-              {data.tasks.length === 0 && (
-                <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-                  no open tasks
-                </div>
-              )}
-            </section>
+            )}
+          </section>
 
-            {/* Projects + Inbox side by side */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
-              {/* Projects */}
-              <section>
-                <div
-                  style={{
-                    color: "#555",
-                    fontSize: "12px",
-                    letterSpacing: "1.5px",
-                    textTransform: "uppercase",
-                    padding: "6px 0 10px",
-                    borderBottom: "1px solid #1a1a1a",
-                    marginBottom: 4,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span>── projects ──</span>
-                  <span>{data.counts.activeProjects}</span>
-                </div>
-                {data.projects.map((project) => (
-                  <ProjectRow key={project.id} project={project} />
-                ))}
-                {data.projects.length === 0 && (
-                  <div
-                    style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}
-                  >
-                    no active projects
-                  </div>
-                )}
-              </section>
-
-              {/* Inbox */}
-              <section>
-                <div
-                  style={{
-                    color: "#555",
-                    fontSize: "12px",
-                    letterSpacing: "1.5px",
-                    textTransform: "uppercase",
-                    padding: "6px 0 10px",
-                    borderBottom: "1px solid #1a1a1a",
-                    marginBottom: 4,
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <span>── inbox ──</span>
-                  <span>{data.counts.unreadInbox} new</span>
-                </div>
-                {data.inbox.map((item) => (
-                  <InboxRow
-                    key={item.id}
-                    item={item}
-                    onMarkRead={handleMarkRead}
-                  />
-                ))}
-                {data.inbox.length === 0 && (
-                  <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-                    inbox clear
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-
-          {/* Right column: Calendar */}
+          {/* Calendar */}
           <div style={{ width: 220, flexShrink: 0 }}>
             <div
               style={{
@@ -220,6 +152,71 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             </div>
             <Calendar events={data.upcomingEvents} />
           </div>
+        </div>
+
+        {/* Projects + Inbox row */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 32 }}>
+          {/* Projects */}
+          <section>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>── projects ──</span>
+              <span>{data.counts.activeProjects}</span>
+            </div>
+            {data.projects.map((project) => (
+              <ProjectRow key={project.id} project={project} />
+            ))}
+            {data.projects.length === 0 && (
+              <div
+                style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}
+              >
+                no active projects
+              </div>
+            )}
+          </section>
+
+          {/* Inbox */}
+          <section>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 4,
+                display: "flex",
+                justifyContent: "space-between",
+              }}
+            >
+              <span>── inbox ──</span>
+              <span>{data.counts.unreadInbox} new</span>
+            </div>
+            {data.inbox.map((item) => (
+              <InboxRow
+                key={item.id}
+                item={item}
+                onMarkRead={handleMarkRead}
+              />
+            ))}
+            {data.inbox.length === 0 && (
+              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+                inbox clear
+              </div>
+            )}
+          </section>
         </div>
       </main>
 
