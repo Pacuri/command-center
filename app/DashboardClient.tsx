@@ -75,75 +75,75 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
     <div style={{ display: "flex", minHeight: "100vh" }}>
       <Sidebar inboxCount={data.counts.unreadInbox} />
 
-      {/* Main content + Calendar sidebar */}
-      <div
+      <main
         style={{
           flex: 1,
-          display: "flex",
+          padding: "24px 32px 64px",
           overflowY: "auto",
+          maxWidth: 960,
         }}
       >
-        {/* Left: main content */}
-        <main
+        {/* Prompt */}
+        <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
+          <span style={{ color: "#4ade80" }}>nikola</span>
+          <span style={{ color: "#333" }}>@cc</span>{" "}
+          <span>~/overview</span>
+        </div>
+        <div
+          style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
+        >
+          {dateStr} · {data.counts.dueToday} due today ·{" "}
+          {data.counts.todayEvents} meeting
+          {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
+          {data.counts.unreadInbox} inbox
+        </div>
+
+        {/* Focus */}
+        {data.focus && <FocusStrip content={data.focus.content} />}
+
+        {/* Tasks */}
+        <section style={{ marginBottom: 28 }}>
+          <div
+            style={{
+              color: "#555",
+              fontSize: "12px",
+              letterSpacing: "1.5px",
+              textTransform: "uppercase",
+              padding: "6px 0 10px",
+              borderBottom: "1px solid #1a1a1a",
+              marginBottom: 4,
+              display: "flex",
+              justifyContent: "space-between",
+            }}
+          >
+            <span>── tasks ──</span>
+            <span>{data.counts.openTasks} open</span>
+          </div>
+          {data.tasks.map((task, i) => (
+            <TaskRow
+              key={task.id}
+              task={task}
+              index={i + 1}
+              onComplete={handleComplete}
+            />
+          ))}
+          {data.tasks.length === 0 && (
+            <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
+              no open tasks
+            </div>
+          )}
+        </section>
+
+        {/* Three-column: Projects | Inbox | Calendar */}
+        <div
           style={{
-            flex: 1,
-            padding: "24px 32px 64px",
-            maxWidth: 640,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr 1fr",
+            gap: 32,
           }}
         >
-          {/* Prompt */}
-          <div style={{ color: "#555", marginBottom: 6, fontSize: "14px" }}>
-            <span style={{ color: "#4ade80" }}>nikola</span>
-            <span style={{ color: "#333" }}>@cc</span>{" "}
-            <span>~/overview</span>
-          </div>
-          <div
-            style={{ marginBottom: 16, color: "#555", fontSize: "13px" }}
-          >
-            {dateStr} · {data.counts.dueToday} due today ·{" "}
-            {data.counts.todayEvents} meeting
-            {data.counts.todayEvents !== 1 ? "s" : ""} ·{" "}
-            {data.counts.unreadInbox} inbox
-          </div>
-
-          {/* Focus */}
-          {data.focus && <FocusStrip content={data.focus.content} />}
-
-          {/* Tasks */}
-          <section style={{ marginBottom: 28 }}>
-            <div
-              style={{
-                color: "#555",
-                fontSize: "12px",
-                letterSpacing: "1.5px",
-                textTransform: "uppercase",
-                padding: "6px 0 10px",
-                borderBottom: "1px solid #1a1a1a",
-                marginBottom: 4,
-                display: "flex",
-                justifyContent: "space-between",
-              }}
-            >
-              <span>── tasks ──</span>
-              <span>{data.counts.openTasks} open</span>
-            </div>
-            {data.tasks.map((task, i) => (
-              <TaskRow
-                key={task.id}
-                task={task}
-                index={i + 1}
-                onComplete={handleComplete}
-              />
-            ))}
-            {data.tasks.length === 0 && (
-              <div style={{ color: "#333", padding: "10px 0", fontSize: "13px" }}>
-                no open tasks
-              </div>
-            )}
-          </section>
-
           {/* Projects */}
-          <section style={{ marginBottom: 28 }}>
+          <section>
             <div
               style={{
                 color: "#555",
@@ -173,7 +173,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
           </section>
 
           {/* Inbox */}
-          <section style={{ marginBottom: 28 }}>
+          <section>
             <div
               style={{
                 color: "#555",
@@ -203,34 +203,26 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
               </div>
             )}
           </section>
-        </main>
 
-        {/* Right: Calendar sidebar */}
-        <aside
-          style={{
-            width: 280,
-            flexShrink: 0,
-            padding: "24px 24px 64px 0",
-            borderLeft: "1px solid #1a1a1a",
-            paddingLeft: 24,
-          }}
-        >
-          <div
-            style={{
-              color: "#555",
-              fontSize: "12px",
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              padding: "6px 0 10px",
-              borderBottom: "1px solid #1a1a1a",
-              marginBottom: 10,
-            }}
-          >
-            ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
-          </div>
-          <Calendar events={data.upcomingEvents} />
-        </aside>
-      </div>
+          {/* Calendar */}
+          <section>
+            <div
+              style={{
+                color: "#555",
+                fontSize: "12px",
+                letterSpacing: "1.5px",
+                textTransform: "uppercase",
+                padding: "6px 0 10px",
+                borderBottom: "1px solid #1a1a1a",
+                marginBottom: 10,
+              }}
+            >
+              ── {months[now.getMonth()].toLowerCase()} {now.getFullYear()} ──
+            </div>
+            <Calendar events={data.upcomingEvents} />
+          </section>
+        </div>
+      </main>
 
       <StatusBar counts={data.counts} />
     </div>
