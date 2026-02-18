@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 
 export interface PopupState {
   id: string;
@@ -29,12 +29,13 @@ interface PopupProps {
   children: React.ReactNode;
 }
 
-type DragMode = "move" | "resize-e" | "resize-s" | "resize-se" | "resize-w" | "resize-sw" | null;
+type DragMode = "move" | "resize-e" | "resize-s" | "resize-se" | "resize-w" | "resize-sw";
 
 const MIN_W = 320;
 const MIN_H = 200;
 const MIN_MAIN = 140;
 const MIN_SIDE = 100;
+const EDGE = 6;
 
 export default function Popup({
   popup,
@@ -48,121 +49,129 @@ export default function Popup({
   children,
 }: PopupProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const modeRef = useRef<DragMode>(null);
-  const startRef = useRef({ mx: 0, my: 0, ox: 0, oy: 0, ow: 0, oh: 0 });
   const [splitPx, setSplitPx] = useState(220);
-  const splitterRef = useRef<{ startX: number; startSplit: number } | null>(null);
+
+  // ── Refs to keep latest props accessible from stable listeners ──
+  const propsRef = useRef({ id: popup.id, x: popup.x, y: popup.y, w: popup.w, h: popup.h, onMove, onResize });
+  propsRef.current = { id: popup.id, x: popup.x, y: popup.y, w: popup.w, h: popup.h, onMove, onResize };
+
+  const navRef = useRef({ canGoBack: popup.canGoBack, canGoForward: popup.canGoForward, onBack, onForward, id: popup.id });
+  navRef.current = { canGoBack: popup.canGoBack, canGoForward: popup.canGoForward, onBack, onForward, id: popup.id };
 
   // ── Drag / Resize ──
+  const dragState = useRef<{ mode: DragMode; startMX: number; startMY: number; startX: number; startY: number; startW: number; startH: number } | null>(null);
+  // Stable handler refs (created once, never change)
+  const handlersRef = useRef<{ move: (e: PointerEvent) => void; up: () => void } | null>(null);
 
-  const handlePointerMove = useCallback(
-    (e: PointerEvent) => {
-      const s = startRef.current;
-      const dx = e.clientX - s.mx;
-      const dy = e.clientY - s.my;
-      const mode = modeRef.current;
-      if (mode === "move") {
-        onMove(popup.id, s.ox + dx, s.oy + dy);
-      } else if (mode === "resize-e") {
-        onResize(popup.id, Math.max(MIN_W, s.ow + dx), s.oh);
-      } else if (mode === "resize-s") {
-        onResize(popup.id, s.ow, Math.max(MIN_H, s.oh + dy));
-      } else if (mode === "resize-se") {
-        onResize(popup.id, Math.max(MIN_W, s.ow + dx), Math.max(MIN_H, s.oh + dy));
-      } else if (mode === "resize-w") {
-        const newW = Math.max(MIN_W, s.ow - dx);
-        const actualDx = s.ow - newW;
-        onMove(popup.id, s.ox + actualDx, s.oy);
-        onResize(popup.id, newW, s.oh);
-      } else if (mode === "resize-sw") {
-        const newW = Math.max(MIN_W, s.ow - dx);
-        const actualDx = s.ow - newW;
-        onMove(popup.id, s.ox + actualDx, s.oy);
-        onResize(popup.id, newW, Math.max(MIN_H, s.oh + dy));
+  if (!handlersRef.current) {
+    const onPtrMove = (e: PointerEvent) => {
+      const ds = dragState.current;
+      if (!ds) return;
+      const p = propsRef.current;
+      const dx = e.clientX - ds.startMX;
+      const dy = e.clientY - ds.startMY;
+      if (ds.mode === "move") {
+        p.onMove(p.id, ds.startX + dx, ds.startY + dy);
+      } else if (ds.mode === "resize-e") {
+        p.onResize(p.id, Math.max(MIN_W, ds.startW + dx), ds.startH);
+      } else if (ds.mode === "resize-s") {
+        p.onResize(p.id, ds.startW, Math.max(MIN_H, ds.startH + dy));
+      } else if (ds.mode === "resize-se") {
+        p.onResize(p.id, Math.max(MIN_W, ds.startW + dx), Math.max(MIN_H, ds.startH + dy));
+      } else if (ds.mode === "resize-w") {
+        const newW = Math.max(MIN_W, ds.startW - dx);
+        p.onMove(p.id, ds.startX + (ds.startW - newW), ds.startY);
+        p.onResize(p.id, newW, ds.startH);
+      } else if (ds.mode === "resize-sw") {
+        const newW = Math.max(MIN_W, ds.startW - dx);
+        p.onMove(p.id, ds.startX + (ds.startW - newW), ds.startY);
+        p.onResize(p.id, newW, Math.max(MIN_H, ds.startH + dy));
       }
-    },
-    [popup.id, onMove, onResize]
-  );
-
-  const handlePointerUp = useCallback(() => {
-    modeRef.current = null;
-    document.removeEventListener("pointermove", handlePointerMove);
-    document.removeEventListener("pointerup", handlePointerUp);
-  }, [handlePointerMove]);
-
-  useEffect(() => {
-    return () => {
-      document.removeEventListener("pointermove", handlePointerMove);
-      document.removeEventListener("pointerup", handlePointerUp);
     };
-  }, [handlePointerMove, handlePointerUp]);
+    const onPtrUp = () => {
+      dragState.current = null;
+      document.removeEventListener("pointermove", onPtrMove);
+      document.removeEventListener("pointerup", onPtrUp);
+    };
+    handlersRef.current = { move: onPtrMove, up: onPtrUp };
+  }
+
+  // Cleanup on unmount
+  useEffect(() => {
+    const h = handlersRef.current!;
+    return () => {
+      document.removeEventListener("pointermove", h.move);
+      document.removeEventListener("pointerup", h.up);
+    };
+  }, []);
 
   function beginDrag(e: React.PointerEvent, mode: DragMode) {
     e.preventDefault();
     e.stopPropagation();
     onBringToFront(popup.id);
-    modeRef.current = mode;
-    startRef.current = { mx: e.clientX, my: e.clientY, ox: popup.x, oy: popup.y, ow: popup.w, oh: popup.h };
-    document.addEventListener("pointermove", handlePointerMove);
-    document.addEventListener("pointerup", handlePointerUp);
+    dragState.current = {
+      mode,
+      startMX: e.clientX, startMY: e.clientY,
+      startX: popup.x, startY: popup.y,
+      startW: popup.w, startH: popup.h,
+    };
+    const h = handlersRef.current!;
+    document.addEventListener("pointermove", h.move);
+    document.addEventListener("pointerup", h.up);
   }
 
   // ── Splitter drag ──
+  const splitState = useRef<{ startX: number; startSplit: number } | null>(null);
+  const splitRef = useRef(splitPx);
+  splitRef.current = splitPx;
+  const splitHandlersRef = useRef<{ move: (e: PointerEvent) => void; up: () => void } | null>(null);
 
-  const handleSplitterMove = useCallback((e: PointerEvent) => {
-    if (!splitterRef.current) return;
-    const dx = e.clientX - splitterRef.current.startX;
-    const newSplit = Math.max(MIN_SIDE, Math.min(400, splitterRef.current.startSplit - dx));
-    setSplitPx(newSplit);
-  }, []);
-
-  const handleSplitterUp = useCallback(() => {
-    splitterRef.current = null;
-    document.removeEventListener("pointermove", handleSplitterMove);
-    document.removeEventListener("pointerup", handleSplitterUp);
-  }, [handleSplitterMove]);
+  if (!splitHandlersRef.current) {
+    const onSplitMove = (e: PointerEvent) => {
+      const ss = splitState.current;
+      if (!ss) return;
+      setSplitPx(Math.max(MIN_SIDE, Math.min(400, ss.startSplit - (e.clientX - ss.startX))));
+    };
+    const onSplitUp = () => {
+      splitState.current = null;
+      document.removeEventListener("pointermove", onSplitMove);
+      document.removeEventListener("pointerup", onSplitUp);
+    };
+    splitHandlersRef.current = { move: onSplitMove, up: onSplitUp };
+  }
 
   useEffect(() => {
+    const h = splitHandlersRef.current!;
     return () => {
-      document.removeEventListener("pointermove", handleSplitterMove);
-      document.removeEventListener("pointerup", handleSplitterUp);
+      document.removeEventListener("pointermove", h.move);
+      document.removeEventListener("pointerup", h.up);
     };
-  }, [handleSplitterMove, handleSplitterUp]);
+  }, []);
 
   function beginSplitterDrag(e: React.PointerEvent) {
     e.preventDefault();
     e.stopPropagation();
-    splitterRef.current = { startX: e.clientX, startSplit: splitPx };
-    document.addEventListener("pointermove", handleSplitterMove);
-    document.addEventListener("pointerup", handleSplitterUp);
+    splitState.current = { startX: e.clientX, startSplit: splitRef.current };
+    const h = splitHandlersRef.current!;
+    document.addEventListener("pointermove", h.move);
+    document.addEventListener("pointerup", h.up);
   }
 
   // ── Mouse back/forward (buttons 3 & 4) ──
-
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const handler = (e: MouseEvent) => {
-      if (e.button === 3) {
-        e.preventDefault();
-        if (popup.canGoBack) onBack(popup.id);
-      } else if (e.button === 4) {
-        e.preventDefault();
-        if (popup.canGoForward) onForward(popup.id);
-      }
+      const n = navRef.current;
+      if (e.button === 3) { e.preventDefault(); if (n.canGoBack) n.onBack(n.id); }
+      else if (e.button === 4) { e.preventDefault(); if (n.canGoForward) n.onForward(n.id); }
     };
     el.addEventListener("mouseup", handler);
     return () => el.removeEventListener("mouseup", handler);
-  }, [popup.id, popup.canGoBack, popup.canGoForward, onBack, onForward]);
+  }, []);
 
-  // ── Edge hit zones (6px inset) ──
-
-  const EDGE = 6;
   const edgeStyle = (pos: React.CSSProperties, cursor: string): React.CSSProperties => ({
-    position: "absolute",
-    ...pos,
-    cursor,
-    zIndex: 2,
+    position: "absolute", ...pos, cursor, zIndex: 2,
   });
 
   return (
@@ -170,17 +179,14 @@ export default function Popup({
       ref={containerRef}
       style={{
         position: "fixed",
-        left: popup.x,
-        top: popup.y,
-        width: popup.w,
-        height: popup.h,
+        left: popup.x, top: popup.y,
+        width: popup.w, height: popup.h,
         background: "#0d0d0d",
         border: "1px solid #1a1a1a",
         borderRadius: 6,
         boxShadow: "0 8px 32px rgba(0,0,0,0.6), 0 0 1px rgba(74,222,128,0.1)",
         zIndex: popup.zIndex,
-        display: "flex",
-        flexDirection: "column",
+        display: "flex", flexDirection: "column",
         overflow: "hidden",
         animation: "popup-in 0.15s ease-out",
       }}
@@ -188,31 +194,27 @@ export default function Popup({
     >
       {/* Resize edges */}
       <div style={edgeStyle({ top: 0, right: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-e")} />
-      <div style={edgeStyle({ bottom: 0, left: 0, width: "100%", height: EDGE }, "ns-resize")} onPointerDown={(e) => beginDrag(e, "resize-s")} />
-      <div style={edgeStyle({ bottom: 0, right: 0, width: EDGE * 2, height: EDGE * 2 }, "nwse-resize")} onPointerDown={(e) => beginDrag(e, "resize-se")} />
+      <div style={edgeStyle({ bottom: 0, left: EDGE, right: EDGE, height: EDGE }, "ns-resize")} onPointerDown={(e) => beginDrag(e, "resize-s")} />
+      <div style={edgeStyle({ bottom: 0, right: 0, width: EDGE * 3, height: EDGE * 3 }, "nwse-resize")} onPointerDown={(e) => beginDrag(e, "resize-se")} />
       <div style={edgeStyle({ top: 0, left: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-w")} />
-      <div style={edgeStyle({ bottom: 0, left: 0, width: EDGE * 2, height: EDGE * 2 }, "nesw-resize")} onPointerDown={(e) => beginDrag(e, "resize-sw")} />
+      <div style={edgeStyle({ bottom: 0, left: 0, width: EDGE * 3, height: EDGE * 3 }, "nesw-resize")} onPointerDown={(e) => beginDrag(e, "resize-sw")} />
 
-      {/* Toolbar */}
+      {/* Toolbar — drag handle */}
       <div
         style={{
-          display: "flex",
-          alignItems: "center",
+          display: "flex", alignItems: "center",
           padding: "7px 12px",
           background: "#111",
           borderBottom: "1px solid #1a1a1a",
-          cursor: "move",
-          flexShrink: 0,
-          gap: 8,
-          position: "relative",
-          zIndex: 3,
+          cursor: "grab", flexShrink: 0, gap: 8,
+          position: "relative", zIndex: 3,
+          userSelect: "none",
         }}
         onPointerDown={(e) => {
           if ((e.target as HTMLElement).closest("button")) return;
           beginDrag(e, "move");
         }}
       >
-        {/* Close + nav */}
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <button
             onClick={() => onClose(popup.id)}
@@ -252,7 +254,6 @@ export default function Popup({
           </button>
         </div>
 
-        {/* Title */}
         <div
           style={{
             flex: 1, fontSize: 12, color: "#888",
@@ -298,8 +299,7 @@ export default function Popup({
       )}
 
       {/* Body */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden", position: "relative" }}>
-        {/* Main content */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         <div
           style={{
             flex: 1, overflowY: "auto", padding: "8px 10px",
@@ -309,7 +309,6 @@ export default function Popup({
           {children}
         </div>
 
-        {/* Draggable splitter + sidebar */}
         {sidebar && (
           <>
             <div
