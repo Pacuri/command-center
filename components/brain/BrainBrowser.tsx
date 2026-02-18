@@ -131,12 +131,15 @@ export default function BrainBrowser() {
   function openPopupAt(x: number, y: number, nav: NavLevel, titleIcon: string, title: string): string {
     const id = `popup-${++popupCounter}`;
     topZ++;
+    const isFinder = nav.level === "category";
     const popup: InternalPopup = {
       id,
       x: Math.min(x + 20, window.innerWidth - 580),
       y: Math.max(Math.min(y - 60, window.innerHeight - 500), 10),
+      w: isFinder ? 400 : 560,
+      h: isFinder ? 340 : 420,
       zIndex: topZ,
-      isFinder: nav.level === "category",
+      isFinder,
       title,
       titleIcon,
       breadcrumbs: [],
@@ -158,8 +161,12 @@ export default function BrainBrowser() {
     setPopups((prev) => prev.map((p) => (p.id === id ? { ...p, zIndex: topZ } : p)));
   }
 
-  function dragMove(id: string, x: number, y: number) {
+  function movePopup(id: string, x: number, y: number) {
     setPopups((prev) => prev.map((p) => (p.id === id ? { ...p, x, y } : p)));
+  }
+
+  function resizePopup(id: string, w: number, h: number) {
+    setPopups((prev) => prev.map((p) => (p.id === id ? { ...p, w, h } : p)));
   }
 
   // Navigate forward: push new nav, truncate any forward history
@@ -456,7 +463,8 @@ export default function BrainBrowser() {
             popup={{ ...popup, title, titleIcon: icon, breadcrumbs, canGoBack, canGoForward }}
             onClose={closePopup}
             onBringToFront={bringToFront}
-            onDragMove={dragMove}
+            onMove={movePopup}
+            onResize={resizePopup}
             onBack={navigateBack}
             onForward={navigateForward}
             sidebar={sidebar}
