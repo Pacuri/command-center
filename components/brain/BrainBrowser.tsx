@@ -8,6 +8,7 @@ import Popup, { type PopupState } from "./Popup";
 import FinderGrid from "./FinderGrid";
 import FileList from "./FileList";
 import FieldViewer from "./FieldViewer";
+import SidebarPreview from "./SidebarPreview";
 
 // ── Constants ──
 
@@ -71,10 +72,12 @@ interface NavLevel {
   schema?: string;
   table?: string;
   rowIndex?: number;
+  selectedIndex?: number; // track selection in file list for sidebar preview
 }
 
 interface InternalPopup extends PopupState {
   navStack: NavLevel[];
+  navIndex: number; // current position in navStack (for forward history)
 }
 
 // ── Component ──
@@ -125,19 +128,22 @@ export default function BrainBrowser() {
     return t?.row_count ?? 0;
   }
 
-  function openPopupAt(x: number, y: number, nav: NavLevel, isFinder: boolean, titleIcon: string, title: string): string {
+  function openPopupAt(x: number, y: number, nav: NavLevel, titleIcon: string, title: string): string {
     const id = `popup-${++popupCounter}`;
     topZ++;
     const popup: InternalPopup = {
       id,
-      x: Math.min(x + 20, window.innerWidth - 540),
+      x: Math.min(x + 20, window.innerWidth - 580),
       y: Math.max(Math.min(y - 60, window.innerHeight - 500), 10),
       zIndex: topZ,
-      isFinder,
+      isFinder: nav.level === "category",
       title,
       titleIcon,
       breadcrumbs: [],
+      canGoBack: false,
+      canGoForward: false,
       navStack: [nav],
+      navIndex: 0,
     };
     setPopups((prev) => [...prev, popup]);
     return id;
@@ -156,15 +162,49 @@ export default function BrainBrowser() {
     setPopups((prev) => prev.map((p) => (p.id === id ? { ...p, x, y } : p)));
   }
 
+  // Navigate forward: push new nav, truncate any forward history
   function navigatePopup(id: string, nav: NavLevel) {
     setPopups((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, navStack: [...p.navStack, nav] } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const newStack = [...p.navStack.slice(0, p.navIndex + 1), nav];
+        return { ...p, navStack: newStack, navIndex: newStack.length - 1 };
+      })
     );
   }
 
-  function navigateBack(id: string, toIndex: number) {
+  // Navigate back (breadcrumb click or back button)
+  function navigateBack(id: string, toIndex?: number) {
     setPopups((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, navStack: p.navStack.slice(0, toIndex + 1) } : p))
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const target = toIndex !== undefined ? toIndex : p.navIndex - 1;
+        if (target < 0) return p;
+        return { ...p, navIndex: target };
+      })
+    );
+  }
+
+  // Navigate forward (forward button)
+  function navigateForward(id: string) {
+    setPopups((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        if (p.navIndex >= p.navStack.length - 1) return p;
+        return { ...p, navIndex: p.navIndex + 1 };
+      })
+    );
+  }
+
+  // Update selected index in current nav (for sidebar preview)
+  function setSelectedIndex(id: string, index: number) {
+    setPopups((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        const newStack = [...p.navStack];
+        newStack[p.navIndex] = { ...newStack[p.navIndex], selectedIndex: index };
+        return { ...p, navStack: newStack };
+      })
     );
   }
 
@@ -172,19 +212,19 @@ export default function BrainBrowser() {
 
   function handleCategoryClick(catId: string, e: React.MouseEvent) {
     const cat = CATEGORIES[catId];
-    openPopupAt(e.clientX, e.clientY, { level: "category", categoryId: catId }, true, cat.icon, cat.label);
+    openPopupAt(e.clientX, e.clientY, { level: "category", categoryId: catId }, cat.icon, cat.label);
   }
 
   function handleCCTableClick(schema: string, table: string, e: React.MouseEvent) {
     fetchTable(schema, table);
-    openPopupAt(e.clientX, e.clientY, { level: "table", schema, table }, false, "📁", `${schema}.${table}`);
+    openPopupAt(e.clientX, e.clientY, { level: "table", schema, table }, "📁", `${schema}.${table}`);
   }
 
   // ── Popup rendering ──
 
   function buildBreadcrumbs(popup: InternalPopup): PopupState["breadcrumbs"] {
-    return popup.navStack.map((nav, i) => {
-      const isLast = i === popup.navStack.length - 1;
+    return popup.navStack.slice(0, popup.navIndex + 1).map((nav, i) => {
+      const isLast = i === popup.navIndex;
       let label = "";
       if (nav.level === "category" && nav.categoryId) {
         label = CATEGORIES[nav.categoryId]?.label || nav.categoryId;
@@ -212,7 +252,7 @@ export default function BrainBrowser() {
   }
 
   function getPopupTitle(popup: InternalPopup): { title: string; icon: string } {
-    const current = popup.navStack[popup.navStack.length - 1];
+    const current = popup.navStack[popup.navIndex];
     if (current.level === "category" && current.categoryId) {
       const cat = CATEGORIES[current.categoryId];
       return { title: cat?.label || "", icon: cat?.icon || "📁" };
@@ -240,8 +280,25 @@ export default function BrainBrowser() {
     return { title: "", icon: "📁" };
   }
 
+  function renderSidebar(popup: InternalPopup): React.ReactNode | undefined {
+    const current = popup.navStack[popup.navIndex];
+
+    // Show sidebar preview when on a table view with a selected row
+    if (current.level === "table" && current.schema && current.table) {
+      const key = `${current.schema}.${current.table}`;
+      const detail = tableData[key];
+      if (detail && current.selectedIndex !== undefined) {
+        const row = detail.rows[current.selectedIndex];
+        return <SidebarPreview row={row || null} tableName={current.table} />;
+      }
+      return <SidebarPreview row={null} />;
+    }
+
+    return undefined;
+  }
+
   function renderPopupContent(popup: InternalPopup) {
-    const current = popup.navStack[popup.navStack.length - 1];
+    const current = popup.navStack[popup.navIndex];
 
     if (current.level === "category" && current.categoryId) {
       const cat = CATEGORIES[current.categoryId];
@@ -275,7 +332,11 @@ export default function BrainBrowser() {
         <FileList
           rows={detail?.rows ?? []}
           loading={isLoading && !detail}
+          selectedIndex={current.selectedIndex}
           onSelectRow={(index) => {
+            setSelectedIndex(popup.id, index);
+          }}
+          onOpenRow={(index) => {
             navigatePopup(popup.id, {
               level: "row",
               categoryId: current.categoryId,
@@ -386,13 +447,19 @@ export default function BrainBrowser() {
       {popups.map((popup) => {
         const { title, icon } = getPopupTitle(popup);
         const breadcrumbs = buildBreadcrumbs(popup);
+        const canGoBack = popup.navIndex > 0;
+        const canGoForward = popup.navIndex < popup.navStack.length - 1;
+        const sidebar = renderSidebar(popup);
         return (
           <Popup
             key={popup.id}
-            popup={{ ...popup, title, titleIcon: icon, breadcrumbs }}
+            popup={{ ...popup, title, titleIcon: icon, breadcrumbs, canGoBack, canGoForward }}
             onClose={closePopup}
             onBringToFront={bringToFront}
             onDragMove={dragMove}
+            onBack={navigateBack}
+            onForward={navigateForward}
+            sidebar={sidebar}
           >
             {renderPopupContent(popup)}
           </Popup>
