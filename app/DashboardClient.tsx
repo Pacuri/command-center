@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import Sidebar from "@/components/Sidebar";
+import Link from "next/link";
 import StatusBar from "@/components/StatusBar";
 import FocusStrip from "@/components/FocusStrip";
 import TaskRow from "@/components/TaskRow";
@@ -73,13 +73,10 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
   };
 
   return (
-    <div style={{ display: "flex", minHeight: "100vh" }}>
-      <Sidebar inboxCount={data.counts.unreadInbox} agentActive={data.agentActive} />
-
+    <div style={{ minHeight: "100vh" }}>
       {/* Content area */}
       <div
         style={{
-          flex: 1,
           padding: "24px 32px 64px",
           overflowY: "auto",
         }}
@@ -152,7 +149,7 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
             </div>
             <Calendar events={data.upcomingEvents} />
 
-            {/* Avatar */}
+            {/* Avatar — links to brain browser */}
             <div style={{ marginTop: 24, display: "flex", justifyContent: "center" }}>
               {data.agentActive && (
                 <style>{`
@@ -162,24 +159,29 @@ export default function DashboardClient({ data: initialData }: { data: Dashboard
                   }
                 `}</style>
               )}
-              <div
-                style={{
-                  width: 158,
-                  height: 158,
-                  borderRadius: "50%",
-                  overflow: "hidden",
-                  border: data.agentActive ? "2px solid #4ade80" : "2px solid #1a1a1a",
-                  animation: data.agentActive ? "avatar-pulse 2s ease-in-out infinite" : "none",
-                  transition: "border-color 0.3s ease",
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src="https://sacwbhhusphqzsaoyhit.supabase.co/storage/v1/object/public/identity/avatar.png"
-                  alt="avatar"
-                  style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                />
-              </div>
+              <Link href="/tables" title="Brain Browser" style={{ textDecoration: "none" }}>
+                <div
+                  style={{
+                    width: 158,
+                    height: 158,
+                    borderRadius: "50%",
+                    overflow: "hidden",
+                    border: data.agentActive ? "2px solid #4ade80" : "2px solid #1a1a1a",
+                    animation: data.agentActive ? "avatar-pulse 2s ease-in-out infinite" : "none",
+                    transition: "border-color 0.3s ease, transform 0.15s ease",
+                    cursor: "pointer",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.transform = "scale(1.04)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src="https://sacwbhhusphqzsaoyhit.supabase.co/storage/v1/object/public/identity/avatar.png"
+                    alt="avatar"
+                    style={{ width: "100%", height: "100%", objectFit: "cover" }}
+                  />
+                </div>
+              </Link>
             </div>
           </aside>
         </div>
