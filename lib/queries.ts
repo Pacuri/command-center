@@ -258,7 +258,7 @@ export async function setFocus(content: string) {
 export async function agentHeartbeat() {
   try {
     await db.execute(
-      sql`UPDATE agent_status SET active = true, last_active = now() WHERE id = 1`
+      sql`UPDATE cc.agent_status SET active = true, last_active = now() WHERE id = 1`
     );
   } catch {
     // Table may not exist yet — ignore silently
@@ -268,7 +268,7 @@ export async function agentHeartbeat() {
 export async function getAgentActive(): Promise<boolean> {
   try {
     const result = await db.execute(
-      sql`SELECT active, last_active FROM agent_status WHERE id = 1`
+      sql`SELECT active, last_active FROM cc.agent_status WHERE id = 1`
     );
     const row = (result as any).rows?.[0];
     if (!row) return false;

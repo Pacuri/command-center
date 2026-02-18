@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: "/tasks", icon: "✓", label: "Tasks" },
   { href: "/calendar", icon: "▦", label: "Calendar" },
   { href: "/projects", icon: "◎", label: "Projects" },
+  { href: "/tables", icon: "▤", label: "Tables" },
 ];
 
 const SECONDARY = [{ href: "/inbox", icon: "▽", label: "Inbox" }];
