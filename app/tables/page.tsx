@@ -28,7 +28,7 @@ export default function TablesPage() {
         <TableBrowser />
       </div>
 
-      <StatusBar counts={{ openTasks: 0, dueToday: 0, todayEvents: 0, activeProjects: 0, unreadInbox: 0 }} />
+      <StatusBar counts={{ openTasks: 0, todayEvents: 0, activeProjects: 0, unreadInbox: 0 }} />
     </div>
   );
 }
