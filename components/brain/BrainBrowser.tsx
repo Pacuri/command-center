@@ -218,11 +218,25 @@ export default function BrainBrowser() {
   // ── Event handlers ──
 
   function handleCategoryClick(catId: string, e: React.MouseEvent) {
+    e.stopPropagation(); // don't trigger closeAll
+    // One popup per category — if already open, bring to front
+    const existing = popups.find((p) => p.navStack[0].categoryId === catId);
+    if (existing) {
+      bringToFront(existing.id);
+      return;
+    }
     const cat = CATEGORIES[catId];
     openPopupAt(e.clientX, e.clientY, { level: "category", categoryId: catId }, cat.icon, cat.label);
   }
 
   function handleCCTableClick(schema: string, table: string, e: React.MouseEvent) {
+    e.stopPropagation(); // don't trigger closeAll
+    // One popup per table — if already open, bring to front
+    const existing = popups.find((p) => p.navStack[0].schema === schema && p.navStack[0].table === table);
+    if (existing) {
+      bringToFront(existing.id);
+      return;
+    }
     fetchTable(schema, table);
     openPopupAt(e.clientX, e.clientY, { level: "table", schema, table }, "📁", `${schema}.${table}`);
   }
@@ -369,6 +383,10 @@ export default function BrainBrowser() {
 
   // ── Render ──
 
+  function closeAllPopups() {
+    setPopups([]);
+  }
+
   return (
     <div
       style={{
@@ -377,6 +395,7 @@ export default function BrainBrowser() {
         position: "relative",
         overflow: "hidden",
       }}
+      onClick={closeAllPopups}
     >
       <style>{`
         @keyframes brain-pulse {

@@ -190,15 +190,9 @@ export default function Popup({
         overflow: "hidden",
         animation: "popup-in 0.15s ease-out",
       }}
+      onClick={(e) => e.stopPropagation()}
       onMouseDown={() => onBringToFront(popup.id)}
     >
-      {/* Resize edges */}
-      <div style={edgeStyle({ top: 0, right: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-e")} />
-      <div style={edgeStyle({ bottom: 0, left: EDGE, right: EDGE, height: EDGE }, "ns-resize")} onPointerDown={(e) => beginDrag(e, "resize-s")} />
-      <div style={edgeStyle({ bottom: 0, right: 0, width: EDGE * 3, height: EDGE * 3 }, "nwse-resize")} onPointerDown={(e) => beginDrag(e, "resize-se")} />
-      <div style={edgeStyle({ top: 0, left: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-w")} />
-      <div style={edgeStyle({ bottom: 0, left: 0, width: EDGE * 3, height: EDGE * 3 }, "nesw-resize")} onPointerDown={(e) => beginDrag(e, "resize-sw")} />
-
       {/* Toolbar — drag handle */}
       <div
         style={{
@@ -335,6 +329,13 @@ export default function Popup({
           </>
         )}
       </div>
+
+      {/* Resize edges — rendered last so they paint on top of body content */}
+      <div style={edgeStyle({ top: 0, right: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-e")} />
+      <div style={edgeStyle({ bottom: 0, left: EDGE, right: EDGE, height: EDGE }, "ns-resize")} onPointerDown={(e) => beginDrag(e, "resize-s")} />
+      <div style={edgeStyle({ bottom: 0, right: 0, width: EDGE * 3, height: EDGE * 3 }, "nwse-resize")} onPointerDown={(e) => beginDrag(e, "resize-se")} />
+      <div style={edgeStyle({ top: 0, left: 0, width: EDGE, height: "100%" }, "ew-resize")} onPointerDown={(e) => beginDrag(e, "resize-w")} />
+      <div style={edgeStyle({ bottom: 0, left: 0, width: EDGE * 3, height: EDGE * 3 }, "nesw-resize")} onPointerDown={(e) => beginDrag(e, "resize-sw")} />
     </div>
   );
 }
