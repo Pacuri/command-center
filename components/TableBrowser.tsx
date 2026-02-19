@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import TableCard from "./TableCard";
+import FieldViewer from "./brain/FieldViewer";
 
 interface TableInfo {
   table_schema: string;
@@ -17,38 +17,51 @@ interface TableDetail {
   rows: Record<string, any>[];
 }
 
-// Domain grouping
 const DOMAIN_MAP: Record<string, string> = {
-  "cc": "command center",
-  "public": "claude's life",
+  cc: "command center",
+  public: "claude's life",
 };
 
-// Which columns to show as preview for known tables
+const TABLE_ICONS: Record<string, string> = {
+  soul: "🫀", identity: "🪞", user_profile: "👤", instance_persona: "🎭",
+  memory: "🧠", opinions: "💭", agents: "🤖",
+  mistakes: "⚡", growth_log: "🌱", daily_logs: "📝",
+  heartbeat: "💓", handoffs: "🤝", tools: "🔧",
+  tasks: "📋", events: "📅", projects: "◎",
+  inbox: "▽", focus: "◉", agent_status: "💚",
+};
+
 function getPreviewColumns(schema: string, table: string): string[] {
   const key = `${schema}.${table}`;
   const map: Record<string, string[]> = {
-    "cc.tasks": ["title", "priority", "status", "due_date"],
-    "cc.events": ["title", "event_date", "event_time", "type"],
+    "cc.tasks": ["title", "priority", "status"],
+    "cc.events": ["title", "event_date", "type"],
     "cc.projects": ["name", "status", "progress"],
-    "cc.inbox": ["title", "source", "read"],
-    "cc.focus": ["content", "active"],
+    "cc.inbox": ["title", "source"],
+    "cc.focus": ["content"],
     "cc.agent_status": ["active", "last_active"],
-    "public.memory": ["key", "category", "content"],
+    "public.memory": ["key", "category"],
     "public.soul": ["content"],
     "public.identity": ["content"],
     "public.agents": ["content"],
     "public.daily_logs": ["log_date", "content"],
     "public.handoffs": ["name", "status"],
-    "public.mistakes": ["what", "pattern", "recurrence", "status"],
+    "public.mistakes": ["what", "pattern", "recurrence"],
     "public.opinions": ["domain", "stance", "confidence"],
     "public.heartbeat": ["task", "status", "priority"],
     "public.instance_persona": ["name", "handoff_id"],
-    "public.growth_log": ["source_table", "change_type", "description"],
+    "public.growth_log": ["source_table", "change_type"],
   };
   return map[key] || [];
 }
 
-function truncate(val: any, max: number = 60): string {
+function rowName(row: Record<string, any>): string {
+  const v = row.title || row.name || row.key || row.task || row.stance || row.what || row.log_date || row.domain || `#${row.id ?? "?"}`;
+  const s = String(v);
+  return s.length > 40 ? s.slice(0, 40) + "…" : s;
+}
+
+function truncate(val: any, max: number = 80): string {
   if (val === null || val === undefined) return "—";
   const s = String(val);
   return s.length > max ? s.slice(0, max) + "…" : s;
@@ -56,9 +69,10 @@ function truncate(val: any, max: number = 60): string {
 
 export default function TableBrowser() {
   const [tables, setTables] = useState<TableInfo[]>([]);
-  const [openTable, setOpenTable] = useState<string | null>(null);
   const [details, setDetails] = useState<Record<string, TableDetail>>({});
-  const [loading, setLoading] = useState<string | null>(null);
+  const [loading, setLoading] = useState<Set<string>>(new Set());
+  const [selectedTable, setSelectedTable] = useState<string | null>(null);
+  const [selectedRow, setSelectedRow] = useState<number | null>(null);
 
   useEffect(() => {
     fetch("/api/tables")
@@ -67,158 +81,170 @@ export default function TableBrowser() {
       .catch(() => {});
   }, []);
 
-  const toggleTable = async (schema: string, name: string) => {
+  const selectTable = async (schema: string, name: string) => {
     const key = `${schema}.${name}`;
-    if (openTable === key) {
-      setOpenTable(null);
-      return;
-    }
-    setOpenTable(key);
-
-    if (!details[key]) {
-      setLoading(key);
+    setSelectedTable(key);
+    setSelectedRow(null);
+    if (!details[key] && !loading.has(key)) {
+      setLoading((prev) => new Set(prev).add(key));
       try {
         const res = await fetch(`/api/tables/${key}`);
         const data = await res.json();
         setDetails((prev) => ({ ...prev, [key]: data }));
-      } catch {
-        // silent
-      }
-      setLoading(null);
+      } catch { /* silent */ }
+      setLoading((prev) => {
+        const next = new Set(prev);
+        next.delete(key);
+        return next;
+      });
     }
   };
 
   // Group by schema
   const grouped: Record<string, TableInfo[]> = {};
   for (const t of tables) {
-    const schema = t.table_schema;
-    if (!grouped[schema]) grouped[schema] = [];
-    grouped[schema].push(t);
+    if (!grouped[t.table_schema]) grouped[t.table_schema] = [];
+    grouped[t.table_schema].push(t);
   }
+  const sortedSchemas = ["cc", "public"].filter((s) => grouped[s]);
 
-  // Show cc first, then public
-  const schemaOrder = ["cc", "public"];
-  const sortedSchemas = Object.keys(grouped).sort(
-    (a, b) => (schemaOrder.indexOf(a) === -1 ? 99 : schemaOrder.indexOf(a)) -
-              (schemaOrder.indexOf(b) === -1 ? 99 : schemaOrder.indexOf(b))
-  );
+  const detail = selectedTable ? details[selectedTable] : null;
+  const isLoading = selectedTable ? loading.has(selectedTable) : false;
+  const previewCols = detail ? getPreviewColumns(detail.schema, detail.table) : [];
+  const selectedRowData = detail && selectedRow !== null ? detail.rows[selectedRow] : null;
 
   return (
-    <div>
-      {sortedSchemas.map((schema) => (
-        <div key={schema} style={{ marginBottom: 32 }}>
-          {/* Schema header */}
-          <div
-            style={{
-              color: "#555",
-              fontSize: 12,
-              letterSpacing: "1.5px",
-              textTransform: "uppercase",
-              padding: "6px 0 10px",
-              borderBottom: "1px solid #1a1a1a",
-              marginBottom: 8,
-              display: "flex",
-              justifyContent: "space-between",
-            }}
-          >
-            <span>── {DOMAIN_MAP[schema] || schema} ──</span>
-            <span>{grouped[schema].length} table{grouped[schema].length !== 1 ? "s" : ""}</span>
-          </div>
-
-          {/* Table cards */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+    <div style={{ display: "flex", height: "calc(100vh - 92px)", overflow: "hidden" }}>
+      {/* Left — table list */}
+      <div
+        style={{
+          width: 220, flexShrink: 0,
+          borderRight: "1px solid #1a1a1a",
+          overflowY: "auto",
+          padding: "12px 0",
+        }}
+      >
+        {sortedSchemas.map((schema) => (
+          <div key={schema} style={{ marginBottom: 16 }}>
+            <div
+              style={{
+                fontSize: 10, letterSpacing: 1.5, textTransform: "uppercase",
+                color: "#333", padding: "4px 16px 8px",
+              }}
+            >
+              {DOMAIN_MAP[schema] || schema}
+            </div>
             {grouped[schema].map((t) => {
               const key = `${t.table_schema}.${t.table_name}`;
-              const isOpen = openTable === key;
-              const detail = details[key];
-              const isLoading = loading === key;
-              const previewCols = getPreviewColumns(t.table_schema, t.table_name);
-
+              const active = selectedTable === key;
               return (
-                <TableCard
+                <div
                   key={key}
-                  table={t}
-                  isOpen={isOpen}
-                  onToggle={() => toggleTable(t.table_schema, t.table_name)}
+                  onClick={() => selectTable(t.table_schema, t.table_name)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: 8,
+                    padding: "7px 16px",
+                    cursor: "pointer",
+                    background: active ? "#111" : "transparent",
+                    borderLeft: active ? "2px solid #4ade80" : "2px solid transparent",
+                    transition: "all 0.1s",
+                  }}
+                  onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#0a0a0a"; }}
+                  onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
                 >
-                  {isLoading && (
-                    <div style={{ color: "#444", fontSize: 12, padding: "8px 0" }}>
-                      loading…
-                    </div>
-                  )}
-                  {detail && detail.rows && (
-                    <div style={{ paddingTop: 8 }}>
-                      {/* Column headers */}
-                      {previewCols.length > 0 && detail.rows.length > 0 && (
-                        <div
-                          style={{
-                            display: "grid",
-                            gridTemplateColumns: `40px ${previewCols.map(() => "1fr").join(" ")}`,
-                            gap: 8,
-                            padding: "4px 0 6px",
-                            borderBottom: "1px solid #111",
-                            marginBottom: 2,
-                          }}
-                        >
-                          <span style={{ fontSize: 10, color: "#333" }}>#</span>
-                          {previewCols.map((col) => (
-                            <span key={col} style={{ fontSize: 10, color: "#444", textTransform: "uppercase", letterSpacing: "0.5px" }}>
-                              {col}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Rows */}
-                      {detail.rows.length === 0 && (
-                        <div style={{ color: "#333", fontSize: 12, padding: "6px 0" }}>
-                          empty table
-                        </div>
-                      )}
-                      {detail.rows.map((row, i) => {
-                        const cols = previewCols.length > 0
-                          ? previewCols
-                          : Object.keys(row).slice(0, 4);
-                        return (
-                          <div
-                            key={i}
-                            style={{
-                              display: "grid",
-                              gridTemplateColumns: `40px ${cols.map(() => "1fr").join(" ")}`,
-                              gap: 8,
-                              padding: "5px 0",
-                              borderBottom: "1px solid #0d0d0d",
-                              fontSize: 12,
-                              alignItems: "start",
-                            }}
-                          >
-                            <span style={{ color: "#333" }}>{row.id ?? i + 1}</span>
-                            {cols.map((col) => (
-                              <span key={col} style={{ color: "#888", wordBreak: "break-word" }}>
-                                {truncate(row[col])}
-                              </span>
-                            ))}
-                          </div>
-                        );
-                      })}
-
-                      {detail.rows.length >= 50 && (
-                        <div style={{ color: "#333", fontSize: 11, padding: "6px 0" }}>
-                          showing first 50 rows
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </TableCard>
+                  <span style={{ fontSize: 14, flexShrink: 0 }}>
+                    {TABLE_ICONS[t.table_name] || "📁"}
+                  </span>
+                  <span style={{ fontSize: 13, color: active ? "#ccc" : "#777", flex: 1 }}>
+                    {t.table_name}
+                  </span>
+                  <span style={{ fontSize: 10, color: "#333" }}>
+                    {t.row_count}
+                  </span>
+                </div>
               );
             })}
           </div>
-        </div>
-      ))}
+        ))}
+        {tables.length === 0 && (
+          <div style={{ color: "#333", fontSize: 12, padding: "8px 16px" }}>loading…</div>
+        )}
+      </div>
 
-      {tables.length === 0 && (
-        <div style={{ color: "#333", fontSize: 13 }}>loading tables…</div>
-      )}
+      {/* Middle — row list */}
+      <div
+        style={{
+          width: 300, flexShrink: 0,
+          borderRight: "1px solid #1a1a1a",
+          overflowY: "auto",
+          display: "flex", flexDirection: "column",
+        }}
+      >
+        {selectedTable && (
+          <div
+            style={{
+              padding: "10px 14px", borderBottom: "1px solid #1a1a1a",
+              fontSize: 12, color: "#555", flexShrink: 0,
+              display: "flex", justifyContent: "space-between",
+            }}
+          >
+            <span>{detail?.table || selectedTable.split(".")[1]}</span>
+            <span>{detail?.rows?.length ?? "…"} rows</span>
+          </div>
+        )}
+        {isLoading && !detail && (
+          <div style={{ color: "#444", fontSize: 12, padding: "16px 14px" }}>loading…</div>
+        )}
+        {detail && detail.rows.length === 0 && (
+          <div style={{ color: "#333", fontSize: 12, padding: "16px 14px" }}>empty table</div>
+        )}
+        {detail && detail.rows.map((row, i) => {
+          const active = selectedRow === i;
+          return (
+            <div
+              key={i}
+              onClick={() => setSelectedRow(i)}
+              style={{
+                padding: "8px 14px",
+                cursor: "pointer",
+                background: active ? "#0f1f0f" : "transparent",
+                borderBottom: "1px solid #0d0d0d",
+                borderLeft: active ? "2px solid #4ade80" : "2px solid transparent",
+                transition: "all 0.1s",
+              }}
+              onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "#0a0a0a"; }}
+              onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+            >
+              <div style={{ fontSize: 13, color: active ? "#ddd" : "#999", marginBottom: 2 }}>
+                {rowName(row)}
+              </div>
+              <div style={{ fontSize: 11, color: "#444", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {previewCols.slice(0, 2).map((col) => truncate(row[col], 40)).join(" · ")}
+              </div>
+            </div>
+          );
+        })}
+        {!selectedTable && (
+          <div style={{ color: "#333", fontSize: 12, padding: "24px 14px", textAlign: "center" }}>
+            select a table
+          </div>
+        )}
+      </div>
+
+      {/* Right — detail view */}
+      <div style={{ flex: 1, overflowY: "auto", padding: "16px 20px" }}>
+        {selectedRowData ? (
+          <FieldViewer row={selectedRowData as Record<string, unknown>} />
+        ) : selectedTable && detail ? (
+          <div style={{ color: "#333", fontSize: 13, paddingTop: 24, textAlign: "center" }}>
+            select a row to view
+          </div>
+        ) : !selectedTable ? (
+          <div style={{ color: "#333", fontSize: 13, paddingTop: 24, textAlign: "center" }}>
+            select a table from the left
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
