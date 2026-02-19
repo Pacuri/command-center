@@ -23,6 +23,7 @@ interface PopupProps {
   onBringToFront: (id: string) => void;
   onMove: (id: string, x: number, y: number) => void;
   onResize: (id: string, w: number, h: number) => void;
+  onMaximize: (id: string) => void;
   onBack: (id: string) => void;
   onForward: (id: string) => void;
   sidebar?: React.ReactNode;
@@ -43,6 +44,7 @@ export default function Popup({
   onBringToFront,
   onMove,
   onResize,
+  onMaximize,
   onBack,
   onForward,
   sidebar,
@@ -208,6 +210,10 @@ export default function Popup({
           if ((e.target as HTMLElement).closest("button")) return;
           beginDrag(e, "move");
         }}
+        onDoubleClick={(e) => {
+          if ((e.target as HTMLElement).closest("button")) return;
+          onMaximize(popup.id);
+        }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           <button
@@ -217,6 +223,15 @@ export default function Popup({
               background: "#333", cursor: "pointer", padding: 0, transition: "background 0.1s",
             }}
             onMouseEnter={(e) => (e.currentTarget.style.background = "#ef4444")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "#333")}
+          />
+          <button
+            onClick={() => onMaximize(popup.id)}
+            style={{
+              width: 12, height: 12, borderRadius: "50%", border: "none",
+              background: "#333", cursor: "pointer", padding: 0, transition: "background 0.1s",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "#4ade80")}
             onMouseLeave={(e) => (e.currentTarget.style.background = "#333")}
           />
           <div style={{ width: 1, height: 14, background: "#1a1a1a", margin: "0 2px" }} />

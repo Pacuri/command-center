@@ -75,9 +75,15 @@ interface NavLevel {
   selectedIndex?: number; // track selection in file list for sidebar preview
 }
 
+interface PreMaxGeo {
+  x: number; y: number; w: number; h: number;
+}
+
 interface InternalPopup extends PopupState {
   navStack: NavLevel[];
   navIndex: number; // current position in navStack (for forward history)
+  maximized: boolean;
+  preMaxGeo?: PreMaxGeo;
 }
 
 // ── Component ──
@@ -147,6 +153,7 @@ export default function BrainBrowser() {
       canGoForward: false,
       navStack: [nav],
       navIndex: 0,
+      maximized: false,
     };
     setPopups((prev) => [...prev, popup]);
     return id;
@@ -167,6 +174,28 @@ export default function BrainBrowser() {
 
   function resizePopup(id: string, w: number, h: number) {
     setPopups((prev) => prev.map((p) => (p.id === id ? { ...p, w, h } : p)));
+  }
+
+  function maximizePopup(id: string) {
+    setPopups((prev) =>
+      prev.map((p) => {
+        if (p.id !== id) return p;
+        if (p.maximized && p.preMaxGeo) {
+          // Restore
+          return { ...p, x: p.preMaxGeo.x, y: p.preMaxGeo.y, w: p.preMaxGeo.w, h: p.preMaxGeo.h, maximized: false, preMaxGeo: undefined };
+        }
+        // Maximize — fill viewport with 20px margin
+        const margin = 20;
+        return {
+          ...p,
+          preMaxGeo: { x: p.x, y: p.y, w: p.w, h: p.h },
+          x: margin, y: margin,
+          w: window.innerWidth - margin * 2,
+          h: window.innerHeight - margin * 2,
+          maximized: true,
+        };
+      })
+    );
   }
 
   // Navigate forward: push new nav, truncate any forward history
@@ -484,6 +513,7 @@ export default function BrainBrowser() {
             onBringToFront={bringToFront}
             onMove={movePopup}
             onResize={resizePopup}
+            onMaximize={maximizePopup}
             onBack={navigateBack}
             onForward={navigateForward}
             sidebar={sidebar}
